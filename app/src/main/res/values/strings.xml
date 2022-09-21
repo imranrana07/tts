@@ -2,4 +2,6 @@
     <string name="app_name">TTS</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="hint_write">এখানে লিখুন অথবা লিখা অন্তর্ভুক্ত করুন...</string>
+    <string name="letter_count">শব্দ 0/2500</string>
 </resources>
