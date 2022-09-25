@@ -37,7 +37,7 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
@@ -75,4 +75,8 @@ dependencies {
 
     //pdf
     implementation 'com.github.mhiew:android-pdf-viewer:3.2.0-beta.1'
+
+    //pdf content extractor
+    implementation 'com.itextpdf:itextg:5.5.10'
+//    implementation 'com.itextpdf:itext7-core:7.2.3'
 }

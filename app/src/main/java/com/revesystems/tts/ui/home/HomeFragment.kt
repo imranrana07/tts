@@ -3,32 +3,31 @@ package com.revesystems.tts.ui.home
 import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
-import android.os.FileUtils
-import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.net.toUri
+import com.itextpdf.text.pdf.PdfReader
+import com.itextpdf.text.pdf.parser.PdfTextExtractor
 import com.revesystems.tts.core.BaseFragment
 import com.revesystems.tts.databinding.FragmentHomeBinding
-import com.revesystems.tts.utils.GONE
-import com.revesystems.tts.utils.VISIBLE
-import java.io.File
+import com.revesystems.tts.utils.*
+import com.shockwave.pdfium.PdfDocument
+import java.io.IOException
+import java.io.InputStream
 
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
+    private lateinit var inputStream: InputStream
 
     // Initialize result launcher
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
-        Log.v("ADSADA","")
+
         if (it.resultCode == RESULT_OK && it != null) {
             controlVisibility(true)
-            binding.pdfViewer.fromUri(it.data?.data!!).load()
+            getTextsFromPdf(it.data?.data!!)
         }else{
             controlVisibility(false)
         }
@@ -67,14 +66,37 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     }
 
     private fun controlVisibility(shouldVisible:Boolean){
-        if (shouldVisible) {
-            binding.pdfViewer.visibility = VISIBLE
-            binding.tlText.visibility = GONE
-            binding.tvLetterCount.visibility = GONE
-        }else{
-            binding.pdfViewer.visibility =GONE
-            binding.tlText.visibility = VISIBLE
-            binding.tvLetterCount.visibility = VISIBLE
+//        if (shouldVisible) {
+//            binding.pdfViewer.visibility = VISIBLE
+//            binding.tlText.visibility = GONE
+//            binding.tvLetterCount.visibility = GONE
+//        }else{
+//            binding.pdfViewer.visibility =GONE
+//            binding.tlText.visibility = VISIBLE
+//            binding.tvLetterCount.visibility = VISIBLE
+//        }
+    }
+    private fun getTextsFromPdf(uri: Uri){
+        var pdfTexts = "test "
+        val stringBuilder = StringBuilder()
+        var pdfReader:PdfReader? = null
+        try {
+            inputStream = requireActivity().contentResolver.openInputStream(uri)!!
+        }catch (e: IOException){
+            toast("Something went wrong")
+        }
+
+        try {
+            pdfReader = PdfReader(inputStream)
+            val pageCount = pdfReader.numberOfPages
+            for (i in 0 until pageCount){
+                pdfTexts += PdfTextExtractor.getTextFromPage(pdfReader,i+1).trim()+"\n"
+            }
+            stringBuilder.append(pdfTexts)
+            pdfReader.close()
+            binding.etText.setText(pdfTexts)
+        }catch (e:IOException){
+
         }
     }
 }
