@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import com.itextpdf.text.pdf.PdfReader
@@ -15,9 +16,12 @@ import com.itextpdf.text.pdf.parser.PdfTextExtractor
 import com.revesystems.tts.core.BaseFragment
 import com.revesystems.tts.databinding.FragmentHomeBinding
 import com.revesystems.tts.utils.*
-import com.shockwave.pdfium.PdfDocument
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.text.PDFTextStripper
 import java.io.IOException
 import java.io.InputStream
+
 
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private lateinit var inputStream: InputStream
@@ -28,6 +32,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         if (it.resultCode == RESULT_OK && it != null) {
             controlVisibility(true)
             getTextsFromPdf(it.data?.data!!)
+//            stripText(it.data?.data!!)
         }else{
             controlVisibility(false)
         }
@@ -39,6 +44,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     override fun init(savedInstanceState: Bundle?) {
         binding.etText.addTextChangedListener(tvWatcher)
         clickEvents()
+        PDFBoxResourceLoader.init(requireContext())
     }
 
     private fun clickEvents(){
@@ -77,7 +83,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 //        }
     }
     private fun getTextsFromPdf(uri: Uri){
-        var pdfTexts = "test "
+        var pdfTexts = ""
         val stringBuilder = StringBuilder()
         var pdfReader:PdfReader? = null
         try {
@@ -98,5 +104,31 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }catch (e:IOException){
 
         }
+    }
+
+    private fun stripText(uri: Uri) {
+        var parsedText: String? = null
+        var document: PDDocument? = null
+        try {
+            inputStream = requireActivity().contentResolver.openInputStream(uri)!!
+            document = PDDocument.load(inputStream)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        try {
+            val pdfStripper = PDFTextStripper()
+            pdfStripper.startPage = 0
+            pdfStripper.endPage = 4
+            parsedText = pdfStripper.getText(document)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            try {
+                document?.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        binding.etText.setText(parsedText)
     }
 }
