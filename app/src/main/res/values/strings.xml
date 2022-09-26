@@ -4,4 +4,15 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="hint_write">এখানে লিখুন অথবা লিখা অন্তর্ভুক্ত করুন...</string>
     <string name="letter_count">শব্দ 0/2500</string>
+    <string name="ascii">ASCII</string>
+    <string name="unicode">UNICODE</string>
+    <string name="text">TEXT</string>
+    <string name="ssml">SSML</string>
+    <string name="speed">গতি</string>
+    <string name="pitch">পিচ</string>
+    <string name="voice">কণ্ঠ</string>
+    <string name="male">পুরুষ</string>
+    <string name="female">নারী</string>
+    <string name="immature">অপ্রাপ্তবয়স্ক</string>
+    <string name="mature">প্রাপ্তবয়স্ক</string>
 </resources>

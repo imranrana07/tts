@@ -7,12 +7,15 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import com.itextpdf.text.pdf.PdfReader
 import com.itextpdf.text.pdf.parser.PdfTextExtractor
+import com.revesystems.tts.R
 import com.revesystems.tts.core.BaseFragment
 import com.revesystems.tts.databinding.FragmentHomeBinding
 import com.revesystems.tts.utils.*
@@ -49,6 +52,77 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
     private fun clickEvents(){
         binding.btnSelectPdf.setOnClickListener { selectPdf() }
+        binding.includeSetting.btnSettings.setOnClickListener {
+            binding.includeSetting.groupSetting.visibility = VISIBLE
+            binding.includeSetting.btnPlay.visibility = GONE
+            binding.includeSetting.btnPause.visibility = GONE
+            binding.includeSetting.btnSettings.visibility = GONE
+        }
+        binding.includeSetting.btnClose.setOnClickListener {
+            binding.includeSetting.groupSetting.visibility = GONE
+            binding.includeSetting.btnPlay.visibility = VISIBLE
+            binding.includeSetting.btnPause.visibility = GONE
+            binding.includeSetting.btnSettings.visibility = VISIBLE
+        }
+
+        binding.includeSetting.tvAscii.setOnClickListener {
+            binding.includeSetting.tvAscii.setBackgroundResource(R.drawable.bg_r4_sol_136)
+            binding.includeSetting.tvAscii.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
+            binding.includeSetting.tvUnicode.setBackgroundResource(R.color.white)
+            binding.includeSetting.tvUnicode.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
+
+        }
+        binding.includeSetting.tvUnicode.setOnClickListener {
+            binding.includeSetting.tvAscii.setBackgroundResource(R.color.white)
+            binding.includeSetting.tvAscii.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
+            binding.includeSetting.tvUnicode.setBackgroundResource(R.drawable.bg_r4_sol_136)
+            binding.includeSetting.tvUnicode.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
+
+        }
+
+        binding.includeSetting.tvText.setOnClickListener {
+            binding.includeSetting.tvText.setBackgroundResource(R.drawable.bg_r4_sol_136)
+            binding.includeSetting.tvText.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
+            binding.includeSetting.tvSSML.setBackgroundResource(R.color.white)
+            binding.includeSetting.tvSSML.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
+
+        }
+        binding.includeSetting.tvSSML.setOnClickListener {
+            binding.includeSetting.tvText.setBackgroundResource(R.color.white)
+            binding.includeSetting.tvText.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
+            binding.includeSetting.tvSSML.setBackgroundResource(R.drawable.bg_r4_sol_136)
+            binding.includeSetting.tvSSML.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
+
+        }
+
+        binding.includeSetting.tvMale.setOnClickListener {
+            binding.includeSetting.tvMale.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
+            binding.includeSetting.tvMale.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
+            binding.includeSetting.tvFemale.setBackgroundResource(R.color.white)
+            binding.includeSetting.tvFemale.setTextColor(ContextCompat.getColor(requireContext(),R.color._999DA7))
+        }
+        binding.includeSetting.tvFemale.setOnClickListener {
+            binding.includeSetting.tvMale.setBackgroundResource(R.color.white)
+            binding.includeSetting.tvMale.setTextColor(ContextCompat.getColor(requireContext(),R.color._999DA7))
+            binding.includeSetting.tvFemale.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
+            binding.includeSetting.tvFemale.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
+        }
+
+        binding.includeSetting.tvImmature.setOnClickListener {
+            binding.includeSetting.tvImmature.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
+            binding.includeSetting.tvImmature.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
+            binding.includeSetting.tvMature.setBackgroundResource(R.color.white)
+            binding.includeSetting.tvMature.setTextColor(ContextCompat.getColor(requireContext(),R.color._999DA7))
+
+        }
+        binding.includeSetting.tvMature.setOnClickListener {
+            binding.includeSetting.tvImmature.setBackgroundResource(R.color.white)
+            binding.includeSetting.tvImmature.setTextColor(ContextCompat.getColor(requireContext(),R.color._999DA7))
+            binding.includeSetting.tvMature.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
+            binding.includeSetting.tvMature.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
+
+        }
+
     }
 
     private val tvWatcher = object : TextWatcher {
@@ -93,7 +167,13 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         try {
+//            if (!inputStream.markSupported())
+//                return
             pdfReader = PdfReader(inputStream)
+            if (pdfReader.cryptoMode != -1) {
+                toast("data encrypted")
+                return
+            }
             val pageCount = pdfReader.numberOfPages
             for (i in 0 until pageCount){
                 pdfTexts += PdfTextExtractor.getTextFromPage(pdfReader,i+1).trim()+"\n"
@@ -102,6 +182,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             pdfReader.close()
             binding.etText.setText(pdfTexts)
         }catch (e:IOException){
+        }catch (e: java.lang.Exception){
 
         }
     }
