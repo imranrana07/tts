@@ -15,4 +15,10 @@
     <string name="female">নারী</string>
     <string name="immature">অপ্রাপ্তবয়স্ক</string>
     <string name="mature">প্রাপ্তবয়স্ক</string>
+    <string name="_1x">-1x</string>
+    <string name="_2x">-2x</string>
+    <string name="p1x">1x</string>
+    <string name="p2x">2x</string>
+    <string name="_0">0</string>
+    <string name="_00_00_00">00:00:00</string>
 </resources>

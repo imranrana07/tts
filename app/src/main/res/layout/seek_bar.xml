@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/seekBar"
+        style="@style/Widget.AppCompat.SeekBar.Discrete"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:max="4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:progress="2"
+        android:thumbTint="@color/_136EE5"
+        android:progressBackgroundTint="@color/_303030"
+        app:tickMarkTint="@color/_F6F9FF"
+        android:minWidth="0dp"
+        android:tickMarkTint="@color/_303030"
+        tools:ignore="UnusedAttribute" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv2x"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/seekBar"
+        app:layout_constraintTop_toBottomOf="@id/seekBar"
+        android:text="@string/_2x"
+        android:textSize="@dimen/sp_8"
+        android:layout_marginStart="@dimen/dp_10"
+        android:textColor="@color/_707070"/>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv0"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/seekBar"
+        app:layout_constraintTop_toBottomOf="@id/seekBar"
+        app:layout_constraintEnd_toEndOf="@id/seekBar"
+        android:text="@string/_0"
+        android:textSize="@dimen/sp_8"
+        android:textColor="@color/_707070"/>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv1x"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@id/tv2x"
+        app:layout_constraintTop_toBottomOf="@id/seekBar"
+        app:layout_constraintEnd_toStartOf="@id/tv0"
+        android:text="@string/_1x"
+        android:textSize="@dimen/sp_8"
+        android:textColor="@color/_707070"/>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvP1x"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@id/tv0"
+        app:layout_constraintTop_toBottomOf="@id/seekBar"
+        app:layout_constraintEnd_toStartOf="@id/tvP2x"
+        android:text="@string/p1x"
+        android:textSize="@dimen/sp_8"
+        android:textColor="@color/_707070"/>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvP2x"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/seekBar"
+        app:layout_constraintEnd_toEndOf="@id/seekBar"
+        android:text="@string/p2x"
+        android:textSize="@dimen/sp_8"
+        android:layout_marginEnd="@dimen/dp_10"
+        android:textColor="@color/_707070"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,13 +4,14 @@ import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.net.Uri
-import android.os.Bundle
+import android.os.*
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
+import android.widget.SeekBar
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.itextpdf.text.pdf.PdfReader
@@ -22,12 +23,13 @@ import com.revesystems.tts.utils.*
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
-import java.io.IOException
-import java.io.InputStream
+import java.io.*
+import java.util.*
 
 
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private lateinit var inputStream: InputStream
+    private var currentSBPosition = 0
 
     // Initialize result launcher
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
@@ -52,17 +54,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
     private fun clickEvents(){
         binding.btnSelectPdf.setOnClickListener { selectPdf() }
-        binding.includeSetting.btnSettings.setOnClickListener {
+        binding.btnSettings.setOnClickListener {
             binding.includeSetting.groupSetting.visibility = VISIBLE
             binding.includeSetting.btnPlay.visibility = GONE
-            binding.includeSetting.btnPause.visibility = GONE
-            binding.includeSetting.btnSettings.visibility = GONE
+            binding.btnSettings.visibility = GONE
         }
         binding.includeSetting.btnClose.setOnClickListener {
             binding.includeSetting.groupSetting.visibility = GONE
             binding.includeSetting.btnPlay.visibility = VISIBLE
-            binding.includeSetting.btnPause.visibility = GONE
-            binding.includeSetting.btnSettings.visibility = VISIBLE
+            binding.btnSettings.visibility = VISIBLE
         }
 
         binding.includeSetting.tvAscii.setOnClickListener {
@@ -70,14 +70,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             binding.includeSetting.tvAscii.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
             binding.includeSetting.tvUnicode.setBackgroundResource(R.color.white)
             binding.includeSetting.tvUnicode.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
-
         }
         binding.includeSetting.tvUnicode.setOnClickListener {
             binding.includeSetting.tvAscii.setBackgroundResource(R.color.white)
             binding.includeSetting.tvAscii.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
             binding.includeSetting.tvUnicode.setBackgroundResource(R.drawable.bg_r4_sol_136)
             binding.includeSetting.tvUnicode.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
-
         }
 
         binding.includeSetting.tvText.setOnClickListener {
@@ -85,14 +83,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             binding.includeSetting.tvText.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
             binding.includeSetting.tvSSML.setBackgroundResource(R.color.white)
             binding.includeSetting.tvSSML.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
-
         }
         binding.includeSetting.tvSSML.setOnClickListener {
             binding.includeSetting.tvText.setBackgroundResource(R.color.white)
             binding.includeSetting.tvText.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
             binding.includeSetting.tvSSML.setBackgroundResource(R.drawable.bg_r4_sol_136)
             binding.includeSetting.tvSSML.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
-
         }
 
         binding.includeSetting.tvMale.setOnClickListener {
@@ -113,13 +109,32 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             binding.includeSetting.tvImmature.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
             binding.includeSetting.tvMature.setBackgroundResource(R.color.white)
             binding.includeSetting.tvMature.setTextColor(ContextCompat.getColor(requireContext(),R.color._999DA7))
-
         }
         binding.includeSetting.tvMature.setOnClickListener {
             binding.includeSetting.tvImmature.setBackgroundResource(R.color.white)
             binding.includeSetting.tvImmature.setTextColor(ContextCompat.getColor(requireContext(),R.color._999DA7))
             binding.includeSetting.tvMature.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
             binding.includeSetting.tvMature.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
+        }
+
+        binding.includeSetting.btnPlayBlue.setOnClickListener {
+            playAudio()
+        }
+        binding.includeSetting.btnPause.setOnClickListener {
+            pauseAudio()
+        }
+
+        binding.includeSetting.btnPlay.setOnClickListener {
+            binding.includeSetting.btnPlay.visibility = GONE
+            binding.includeSetting.playSetting.visibility = VISIBLE
+            playAudio()
+        }
+
+        binding.includeSetting.btnDownloadTxt.setOnClickListener {
+            saveFile()
+        }
+
+        binding.includeSetting.btnDownloadAudio.setOnClickListener {
 
         }
 
@@ -137,14 +152,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             binding.tvLetterCount.text = "${p0.toString().length}/2500"
         }
     }
-
     private fun selectPdf(){
         val pdfIntent = Intent(Intent.ACTION_GET_CONTENT)
         pdfIntent.type = "application/pdf"
         pdfIntent.addCategory(Intent.CATEGORY_OPENABLE)
         resultLauncher.launch(pdfIntent)
     }
-
     private fun controlVisibility(shouldVisible:Boolean){
 //        if (shouldVisible) {
 //            binding.pdfViewer.visibility = VISIBLE
@@ -211,5 +224,71 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             }
         }
         binding.etText.setText(parsedText)
+    }
+
+    private fun playAudio(){
+        binding.includeSetting.btnPlayBlue.visibility = INVISIBLE
+        binding.includeSetting.btnPause.visibility = VISIBLE
+        binding.includeSetting.skPlayProgress.progress = 0
+        binding.includeSetting.skPlayProgress.max = 100
+        seekBarChange()
+    }
+
+    private fun pauseAudio(){
+        binding.includeSetting.btnPlayBlue.visibility = VISIBLE
+        binding.includeSetting.btnPause.visibility = INVISIBLE
+    }
+
+    private fun seekBarChange(){
+        object: CountDownTimer(10000, 100){
+            override fun onTick(p0: Long) {
+                milliToTime(p0)
+                binding.includeSetting.skPlayProgress.progress = 100-(p0/100).toInt()
+            }
+            override fun onFinish() {
+                binding.includeSetting.btnPlayBlue.visibility = VISIBLE
+                binding.includeSetting.btnPause.visibility = INVISIBLE
+            }
+        }.start()
+
+        binding.includeSetting.skPlayProgress.setOnSeekBarChangeListener(object :SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar?, p1: Int, p2: Boolean) {
+            }
+
+            override fun onStartTrackingTouch(p0: SeekBar?) {
+
+            }
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {
+
+            }
+        })
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun milliToTime(millis: Long){
+        val milliToSecond = (millis/1000)
+        val minute = milliToSecond/60
+        val seconds = milliToSecond % 60
+        val hrs = (minute/60)
+        binding.includeSetting.tvTimer.text = "$hrs:$minute:$seconds"
+    }
+
+    private fun saveFile(){
+        try {
+            val exDir = Environment.getExternalStorageDirectory()
+            val directory = File(exDir.absolutePath.toString() + "/TTS")
+            directory.mkdirs()
+            val  file = File(exDir,"data.txt")
+            val fileOutputStream = FileOutputStream(file)
+            val outputStreamWriter = OutputStreamWriter(fileOutputStream);
+            outputStreamWriter.write(binding.etText.text.toString())
+            outputStreamWriter.flush();
+            outputStreamWriter.close();
+            Toast.makeText(requireContext(), "saved", Toast.LENGTH_LONG).show()
+        } catch (e: IOException) {
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG)
+                .show();
+        }
     }
 }

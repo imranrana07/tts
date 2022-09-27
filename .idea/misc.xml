@@ -3,6 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/drawable-v24/bg_r6_sol_ff_st_c7c.xml" value="0.128" />
         <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/drawable/bg_r12_sol_136.xml" value="0.128" />
         <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/drawable/bg_r12_sol_f6f.xml" value="0.128" />
         <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/drawable/bg_r12_sol_ff.xml" value="0.128" />
@@ -11,10 +12,12 @@
         <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/drawable/bg_splash.xml" value="0.128" />
         <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/drawable/btn_settings.xml" value="0.128" />
         <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/drawable/ic_letters.xml" value="0.128" />
+        <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/drawable/ic_play.xml" value="0.128" />
         <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/layout/activity_main.xml" value="0.19444444444444445" />
         <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/layout/fragment_home.xml" value="0.19444444444444445" />
         <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/layout/fragment_splash.xml" value="0.19444444444444445" />
-        <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/layout/setting_layout.xml" value="0.19444444444444445" />
+        <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/layout/seek_bar.xml" value="0.19444444444444445" />
+        <entry key="..\:/Users/Reve/StudioProjects/tts/app/src/main/res/layout/setting_layout.xml" value="0.264" />
       </map>
     </option>
   </component>

@@ -59,7 +59,7 @@
             android:layout_height="match_parent"
             android:background="@drawable/bg_r6_sol_ff"
             android:gravity="start"
-            android:hint="@string/hint_write"
+            android:text="@string/hint_write"
             android:textColorHint="@color/_C7C9CB"
             android:textColor="@color/_303030"
             android:textSize="@dimen/sp_16"/>
@@ -78,13 +78,24 @@
         android:id="@+id/tvLetterCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="@id/tlText"
+        app:layout_constraintStart_toStartOf="@id/tlText"
         app:layout_constraintBottom_toBottomOf="@id/tlText"
         android:text="@string/letter_count"
         android:layout_marginBottom="@dimen/dp_24"
-        android:layout_marginEnd="@dimen/dp_16"
+        android:layout_marginStart="@dimen/dp_16"
         android:textColor="@color/_C7C9CB"
         android:textSize="@dimen/sp_16"/>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/btnSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="@id/tlText"
+        app:layout_constraintBottom_toBottomOf="@id/tlText"
+        android:background="@drawable/btn_settings"
+        android:layout_marginBottom="@dimen/dp_10"
+        android:layout_marginTop="@dimen/dp_5"
+        android:layout_marginEnd="@dimen/dp_16"/>
 
     <include
         android:id="@+id/includeSetting"
