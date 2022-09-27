@@ -2,18 +2,20 @@ package com.revesystems.tts.ui.home
 
 import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
+import android.app.DownloadManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.*
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import com.itextpdf.text.pdf.PdfReader
 import com.itextpdf.text.pdf.parser.PdfTextExtractor
 import com.revesystems.tts.R
@@ -135,7 +137,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         binding.includeSetting.btnDownloadAudio.setOnClickListener {
-
+            saveAudio()
         }
 
     }
@@ -290,5 +292,19 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG)
                 .show();
         }
+    }
+
+    private fun saveAudio(){
+        val downloadManager = requireContext().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager?
+        val uri = Uri.parse("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
+        val request = DownloadManager.Request(uri)
+//        request.setVisibleInDownloadsUi(true)
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+        request.setDestinationInExternalPublicDir(
+            Environment.DIRECTORY_DOWNLOADS,
+            uri.lastPathSegment
+        )
+        toast("download started")
+        downloadManager!!.enqueue(request)
     }
 }
