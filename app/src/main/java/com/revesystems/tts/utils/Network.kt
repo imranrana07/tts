@@ -11,7 +11,8 @@ import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
 import java.io.IOException
 
-const val BASE_URL = "http://dev.revesoft.com"
+//const val BASE_URL = "http://dev.revesoft.com"
+const val BASE_URL = "https://dev.revesoft.com:6790"
 //const val BASE_URL = "http://dev.revesoft.com/crowd-app-test"
 //const val BASE_URL = "http://192.168.26.102:8080"
 

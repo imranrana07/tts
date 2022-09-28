@@ -81,5 +81,4 @@ dependencies {
 //    implementation 'com.itextpdf:itext7-core:7.2.3'
     implementation 'com.tom-roush:pdfbox-android:2.0.25.0'
     implementation 'com.madgag.spongycastle:core:1.54.0.0'
-
 }

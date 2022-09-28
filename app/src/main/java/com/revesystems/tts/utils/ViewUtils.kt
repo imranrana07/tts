@@ -6,7 +6,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 
 fun Fragment.toast(message:String){
-    Toast.makeText(context,message,Toast.LENGTH_LONG).show()
+    Toast.makeText(context,message,Toast.LENGTH_SHORT).show()
 }
 fun Context.toast(message:String){
     Toast.makeText(applicationContext,message,Toast.LENGTH_LONG).show()
