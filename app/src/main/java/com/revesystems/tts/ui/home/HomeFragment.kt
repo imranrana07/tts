@@ -40,7 +40,6 @@ import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.bouncycastle.util.encoders.Base64
 import java.io.*
 
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
@@ -50,6 +49,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private var lines = ArrayList<String>()
     private var playList = ArrayList<PlayListModel>()
     private var isPlaying = false
+    private var isPaused = false
     private var startingPoint = 0
     private var currentPlayPosition = 0
     private var url = ""
@@ -139,28 +139,34 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         binding.includeSetting.btnPlayBlue.setOnClickListener {
+            isPaused = false
             if (playerListening!= null){
                 playerListening?.seekTo(currentPlayPosition)
                 playerListening?.start()
                 binding.includeSetting.btnPlayBlue.visibility = INVISIBLE
                 binding.includeSetting.btnPause.visibility = VISIBLE
+                currentPlayPosition = 0
             }
         }
         binding.includeSetting.btnPause.setOnClickListener {
+            isPaused = true
             if (playerListening!=null && playerListening?.isPlaying == true){
                 playerListening?.pause()
                 currentPlayPosition = playerListening?.currentPosition!!
                 binding.includeSetting.btnPause.visibility = INVISIBLE
                 binding.includeSetting.btnPlayBlue.visibility = VISIBLE
             }
+
         }
 
         binding.includeSetting.btnPlay.setOnClickListener {
+            isPaused = false
             binding.includeSetting.btnPlay.visibility = GONE
             binding.includeSetting.playSetting.visibility = VISIBLE
             binding.includeSetting.btnPlayBlue.visibility = INVISIBLE
             binding.includeSetting.btnPause.visibility = VISIBLE
             splitTexts()
+            currentPlayPosition = 0
         }
 
         binding.includeSetting.btnDownloadTxt.setOnClickListener {
@@ -168,7 +174,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         binding.includeSetting.btnDownloadAudio.setOnClickListener {
-//            saveAudio()
+            saveAudio()
         }
 
     }
@@ -227,7 +233,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private fun getTextsFromPdf(uri: Uri){
         var pdfTexts = ""
         val stringBuilder = StringBuilder()
-        var pdfReader:PdfReader? = null
+        var pdfReader: PdfReader? = null
         try {
             inputStream = requireActivity().contentResolver.openInputStream(uri)!!
         }catch (e: IOException){
@@ -235,12 +241,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         try {
-//            if (!inputStream.markSupported())
-//                return
             pdfReader = PdfReader(inputStream)
             if (pdfReader.cryptoMode != -1) {
                 toast("data encrypted")
-                return
+//                return
             }
             val pageCount = pdfReader.numberOfPages
             for (i in 0 until pageCount){
@@ -379,6 +383,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                 playerListening?.setDataSource("data:audio/wav;base64,${playList[0].url}")
                 playerListening?.prepareAsync()
                 playerListening?.setOnPreparedListener {
+                    if (isPaused)
+                        return@setOnPreparedListener
                     highlightText(playList[0].word)
                     playerListening?.start()
                     isPlaying = true

@@ -77,6 +77,7 @@ dependencies {
     implementation 'com.github.mhiew:android-pdf-viewer:3.2.0-beta.1'
 
     //pdf content extractor
+//    implementation 'com.itextpdf.android:kernel-android:7.2.3'
     implementation 'com.itextpdf:itextg:5.5.10'
 //    implementation 'com.itextpdf:itext7-core:7.2.3'
     implementation 'com.tom-roush:pdfbox-android:2.0.25.0'
