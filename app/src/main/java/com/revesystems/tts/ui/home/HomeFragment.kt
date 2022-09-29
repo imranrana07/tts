@@ -17,6 +17,7 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextWatcher
 import android.text.style.BackgroundColorSpan
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.SeekBar
@@ -39,8 +40,10 @@ import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.*
+import kotlin.time.Duration.Companion.seconds
 
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private lateinit var inputStream: InputStream
@@ -160,6 +163,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         binding.includeSetting.btnPlay.setOnClickListener {
+            seekBarChange(8000)
             isPaused = false
             binding.includeSetting.btnPlay.visibility = GONE
             binding.includeSetting.playSetting.visibility = VISIBLE
@@ -176,7 +180,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         binding.includeSetting.btnDownloadAudio.setOnClickListener {
             saveAudio()
         }
-
     }
 
     private fun observers(){
@@ -185,7 +188,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         viewModel.success.observe(this) {
-            url = it?.output!!
+//            url = it?.output!!
             playOnlineAudio()
             it?.output?.let {
                     it1 -> playList.add(PlayListModel(lines[0],it1))
@@ -285,21 +288,17 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         binding.etText.setText(parsedText)
     }
 
-    private fun playAudio(){
+    private fun seekBarChange(millis:Long){
+        val totalMillis = if (millis>1000) millis else 1000
         binding.includeSetting.skPlayProgress.progress = 0
-        binding.includeSetting.skPlayProgress.max = 100
-        seekBarChange()
-    }
+        binding.includeSetting.skPlayProgress.max =  (totalMillis/1000).toInt()
 
-    private fun seekBarChange(){
-        object: CountDownTimer(10000, 100){
+        object: CountDownTimer(totalMillis, 1000){
             override fun onTick(p0: Long) {
                 milliToTime(p0)
-                binding.includeSetting.skPlayProgress.progress = 100-(p0/100).toInt()
+                binding.includeSetting.skPlayProgress.progress = (totalMillis/1000).toInt() - (p0/1000).toInt()
             }
             override fun onFinish() {
-                binding.includeSetting.btnPlayBlue.visibility = VISIBLE
-                binding.includeSetting.btnPause.visibility = INVISIBLE
             }
         }.start()
 
@@ -386,6 +385,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                     if (isPaused)
                         return@setOnPreparedListener
                     highlightText(playList[0].word)
+//                    seekBarChange(playerListening?.duration!!.toLong())
                     playerListening?.start()
                     isPlaying = true
                 }
@@ -421,7 +421,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         val colorW = BackgroundColorSpan(Color.WHITE)
         spannable.setSpan(colorW,0,binding.etText.text?.length!!,Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
         val color = BackgroundColorSpan(Color.YELLOW)
-        spannable.setSpan(color,startingPoint,startingPoint+text.length,Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+        if (text.length > binding.etText.text!!.length)
+            spannable.setSpan(color,startingPoint,binding.etText.text!!.length,Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+        else
+            spannable.setSpan(color,startingPoint,startingPoint+text.length,Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
         binding.etText.setText(spannable)
         if (playList[playList.size-1].word != text) {
             startingPoint += text.length + 1
