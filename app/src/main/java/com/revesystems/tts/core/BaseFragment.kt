@@ -10,18 +10,18 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.viewbinding.ViewBinding
 import kotlin.reflect.KClass
 
-abstract class BaseFragment<VIEW_BINDING: ViewBinding,VIEW_MODEL: ViewModel>:Fragment() {
-    protected lateinit var binding: VIEW_BINDING
+abstract class BaseFragment<VIEW_BINDING: ViewBinding?,VIEW_MODEL: ViewModel>:Fragment() {
+    protected var binding: VIEW_BINDING? = null
     protected lateinit var viewModel: VIEW_MODEL
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = setLayout(inflater,container)
         viewModel = ViewModelProvider(this)[setViewModel()]
-        return binding.root
+        return binding!!.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -31,6 +31,12 @@ abstract class BaseFragment<VIEW_BINDING: ViewBinding,VIEW_MODEL: ViewModel>:Fra
 
     protected abstract fun init(savedInstanceState: Bundle?)
 
-    abstract fun setLayout(inflater: LayoutInflater, container: ViewGroup?): VIEW_BINDING
+    abstract fun setLayout(inflater: LayoutInflater, container: ViewGroup?): VIEW_BINDING?
     abstract fun setViewModel(): Class<VIEW_MODEL>
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
+    }
+
 }

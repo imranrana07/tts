@@ -49,7 +49,7 @@ fun TextView.changeColor(forText: String, foregroundColor: Int? = null, style: S
         )
     }
 
-    // check if we have a stylespan
+    // check if we have a style span
     style?.let {
         spannable.setSpan(
             style,
