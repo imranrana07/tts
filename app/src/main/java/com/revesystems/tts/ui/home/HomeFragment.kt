@@ -17,12 +17,16 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextWatcher
 import android.text.style.BackgroundColorSpan
+import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.net.UriCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.itextpdf.text.pdf.PdfReader
 import com.itextpdf.text.pdf.parser.PdfTextExtractor
@@ -38,10 +42,13 @@ import com.revesystems.tts.utils.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.*
+import java.net.URI
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private lateinit var inputStream: InputStream
-    private var currentSBPosition = 0
+//    private var currentSBPosition = 0
     private var playerListening: MediaPlayer?=null
     private var lines = ArrayList<String>()
     private var playList = ArrayList<PlayListModel>()
@@ -74,12 +81,21 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             binding!!.includeSetting.groupSetting.visibility = VISIBLE
             binding!!.includeSetting.btnPlay.visibility = GONE
             binding!!.btnSettings.visibility = GONE
+            binding!!.btnSelectPdf.visibility = GONE
         }
-        binding!!.includeSetting.btnClose.setOnClickListener {
+        binding!!.includeSetting.btnSave.setOnClickListener {
             binding!!.includeSetting.groupSetting.visibility = GONE
             if (binding!!.includeSetting.playSetting.visibility != VISIBLE)
                 binding!!.includeSetting.btnPlay.visibility = VISIBLE
             binding!!.btnSettings.visibility = VISIBLE
+            binding!!.btnSelectPdf.visibility = VISIBLE
+        }
+        binding!!.includeSetting.btnCancel.setOnClickListener {
+            binding!!.includeSetting.groupSetting.visibility = GONE
+            if (binding!!.includeSetting.playSetting.visibility != VISIBLE)
+                binding!!.includeSetting.btnPlay.visibility = VISIBLE
+            binding!!.btnSettings.visibility = VISIBLE
+            binding!!.btnSelectPdf.visibility = VISIBLE
         }
 
         binding!!.includeSetting.tvAscii.setOnClickListener {
@@ -177,12 +193,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
     private fun observers(){
         viewModel.progressBar.observe(this) {
-//            binding!!.progressBar.visibility = it
         }
 
         viewModel.success.observe(this) {
-//            url = it?.output!!
             playOnlineAudio()
+            url = it?.output!!
             it?.output?.let {
                     it1 -> playList.add(PlayListModel(lines[0],it1))
                 lines.removeAt(0)
@@ -193,7 +208,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
         viewModel.error.observe(this) {
             Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
-//            viewModel.getAudio(ReqModel(lines[0]))
         }
     }
 
@@ -229,7 +243,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private fun getTextsFromPdf(uri: Uri){
         var pdfTexts = ""
         val stringBuilder = StringBuilder()
-        var pdfReader: PdfReader? = null
+        val pdfReader: PdfReader?
         try {
             inputStream = requireActivity().contentResolver.openInputStream(uri)!!
         }catch (e: IOException){
@@ -240,7 +254,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             pdfReader = PdfReader(inputStream)
             if (pdfReader.cryptoMode != -1) {
                 toast("data encrypted")
-//                return
             }
             val pageCount = pdfReader.numberOfPages
             for (i in 0 until pageCount){
@@ -251,7 +264,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             binding!!.etText.setText(pdfTexts)
         }catch (e:IOException){
         }catch (e: java.lang.Exception){
-
         }
     }
 
@@ -271,6 +283,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
         binding!!.includeSetting.skPlayProgress.setOnSeekBarChangeListener(object :SeekBar.OnSeekBarChangeListener{
             override fun onProgressChanged(seekBar: SeekBar?, p1: Int, p2: Boolean) {
+
             }
 
             override fun onStartTrackingTouch(p0: SeekBar?) {
@@ -288,7 +301,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         val milliToSecond = (millis/1000)
         val seconds = if (milliToSecond % 60 <= 9) "0${milliToSecond % 60}" else milliToSecond % 60
         val minute = if ((milliToSecond/60) %60 <= 9) "0${(milliToSecond/60) %60}" else (milliToSecond/60) %60
-        val hrs = if ((minute.toString().toInt()/60) <= 9) "0${minute.toString().toInt()/60}" else (minute.toString().toInt()/60)
+        val hrs = if ((milliToSecond.toString().toInt()/3600) <= 9) "0${milliToSecond.toString().toInt()/3600}" else (milliToSecond.toString().toInt()/3600)
         binding!!.includeSetting.tvTimer.text = "$hrs:$minute:$seconds"
     }
 
@@ -312,9 +325,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
     @SuppressLint("NewApi")
     private fun saveAudio(){
-        val urls = java.util.Base64.getUrlDecoder().decode("data:audio/wav;base64,$url")
+        val decoded = java.util.Base64.getUrlDecoder().decode("data:audio/wav;base64,$url")
         val downloadManager = requireContext().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager?
-        val uri = Uri.parse(String(urls)/*"data:audio/wav;base64,${ playList[2].url }"*//*"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"*/)
+        val stringUrl = String(decoded,StandardCharsets.UTF_8)
+        val uri = stringUrl.toUri()//Uri.parse("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
         val request = DownloadManager.Request(uri)
 //        request.setVisibleInDownloadsUi(true)
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
@@ -383,15 +397,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     }
 
     private fun highlightText(text: String){
-        binding!!.etText.setBackgroundColor(Color.WHITE)
+        val endChar = startingPoint+text.length
         val spannable = SpannableString(binding!!.etText.text)
         val colorW = BackgroundColorSpan(Color.WHITE)
         spannable.setSpan(colorW,0,binding!!.etText.text?.length!!,Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
         val color = BackgroundColorSpan(Color.YELLOW)
-        if (text.length > binding!!.etText.text!!.length)
+        if (endChar > binding!!.etText.text!!.length)
             spannable.setSpan(color,startingPoint,binding!!.etText.text!!.length,Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
         else
-            spannable.setSpan(color,startingPoint,startingPoint+text.length,Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(color,startingPoint,endChar,Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
         binding!!.etText.setText(spannable)
         if (playList[playList.size-1].word != text) {
             startingPoint += text.length + 1

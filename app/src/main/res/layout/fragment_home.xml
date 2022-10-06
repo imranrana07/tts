@@ -23,17 +23,6 @@
         app:srcCompat="@drawable/ic_header_icon"
         android:layout_marginStart="@dimen/dp_16"/>
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/btnSelectPdf"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/viewTop"
-        app:layout_constraintBottom_toBottomOf="@id/viewTop"
-        app:srcCompat="@drawable/ic_select_pdf"
-        android:padding="@dimen/dp_8"
-        android:layout_marginEnd="@dimen/dp_12"/>
-
     <View
         android:id="@+id/viewCode"
         android:layout_width="match_parent"
@@ -96,6 +85,17 @@
         android:layout_marginBottom="@dimen/dp_10"
         android:layout_marginTop="@dimen/dp_5"
         android:layout_marginEnd="@dimen/dp_16"/>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/btnSelectPdf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toStartOf="@id/btnSettings"
+        app:layout_constraintTop_toTopOf="@id/btnSettings"
+        app:layout_constraintBottom_toBottomOf="@id/btnSettings"
+        app:srcCompat="@drawable/ic_select_pdf"
+        android:padding="@dimen/dp_8"
+        android:layout_marginEnd="@dimen/dp_12"/>
 
     <include
         android:id="@+id/includeSetting"
