@@ -41,7 +41,6 @@ class SettingsBottomSheetFragment: BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         clickEvents()
     }
     
@@ -55,23 +54,15 @@ class SettingsBottomSheetFragment: BottomSheetDialogFragment() {
 
         binding.tvAscii.setOnClickListener {
             binding.tvAscii.setBackgroundResource(R.drawable.bg_r4_sol_136)
-            binding.tvAscii.setTextColor(
-                ContextCompat.getColor(requireContext(),
-                    R.color.white))
+            binding.tvAscii.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
             binding.tvUnicode.setBackgroundResource(R.color.white)
-            binding.tvUnicode.setTextColor(
-                ContextCompat.getColor(requireContext(),
-                    R.color._136EE5))
+            binding.tvUnicode.setTextColor(ContextCompat.getColor(requireContext(), R.color._136EE5))
         }
         binding.tvUnicode.setOnClickListener {
             binding.tvAscii.setBackgroundResource(R.color.white)
-            binding.tvAscii.setTextColor(
-                ContextCompat.getColor(requireContext(),
-                    R.color._136EE5))
+            binding.tvAscii.setTextColor(ContextCompat.getColor(requireContext(), R.color._136EE5))
             binding.tvUnicode.setBackgroundResource(R.drawable.bg_r4_sol_136)
-            binding.tvUnicode.setTextColor(
-                ContextCompat.getColor(requireContext(),
-                    R.color.white))
+            binding.tvUnicode.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
         }
 
         binding.tvText.setOnClickListener {
@@ -88,41 +79,31 @@ class SettingsBottomSheetFragment: BottomSheetDialogFragment() {
         }
 
         binding.tvMale.setOnClickListener {
-            binding.tvMale.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
-            binding.tvMale.setTextColor(ContextCompat.getColor(requireContext(), R.color._136EE5))
+            binding.tvMale.setBackgroundResource(R.drawable.bg_r4_sol_136)
+            binding.tvMale.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
             binding.tvFemale.setBackgroundResource(R.color.white)
-            binding.tvFemale.setTextColor(
-                ContextCompat.getColor(requireContext(),
-                    R.color._999DA7))
+            binding.tvFemale.setTextColor(ContextCompat.getColor(requireContext(), R.color._136EE5))
         }
         binding.tvFemale.setOnClickListener {
+            binding.tvFemale.setBackgroundResource(R.drawable.bg_r4_sol_136)
+            binding.tvFemale.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
             binding.tvMale.setBackgroundResource(R.color.white)
-            binding.tvMale.setTextColor(ContextCompat.getColor(requireContext(), R.color._999DA7))
-            binding.tvFemale.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
-            binding.tvFemale.setTextColor(
-                ContextCompat.getColor(requireContext(),
-                    R.color._136EE5))
+            binding.tvMale.setTextColor(ContextCompat.getColor(requireContext(), R.color._136EE5))
         }
 
         binding.tvImmature.setOnClickListener {
-            binding.tvImmature.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
-            binding.tvImmature.setTextColor(
-                ContextCompat.getColor(requireContext(),
-                    R.color._136EE5))
+            binding.tvImmature.setBackgroundResource(R.drawable.bg_r4_sol_136)
+            binding.tvImmature.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
             binding.tvMature.setBackgroundResource(R.color.white)
-            binding.tvMature.setTextColor(
-                ContextCompat.getColor(requireContext(),
-                    R.color._999DA7))
+            binding.tvMature.setTextColor(ContextCompat.getColor(requireContext(), R.color._136EE5))
         }
         binding.tvMature.setOnClickListener {
+            binding.tvMature.setBackgroundResource(R.drawable.bg_r4_sol_136)
+            binding.tvMature.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
             binding.tvImmature.setBackgroundResource(R.color.white)
-            binding.tvImmature.setTextColor(
-                ContextCompat.getColor(requireContext(),
-                    R.color._999DA7))
-            binding.tvMature.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
-            binding.tvMature.setTextColor(
-                ContextCompat.getColor(requireContext(),
-                    R.color._136EE5))
+            binding.tvImmature.setTextColor(ContextCompat.getColor(requireContext(), R.color._136EE5))
         }
     }
+
+
 }

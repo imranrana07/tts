@@ -19,14 +19,13 @@ import android.text.TextWatcher
 import android.text.style.BackgroundColorSpan
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.itextpdf.text.ExceptionConverter
 import com.itextpdf.text.pdf.PdfReader
 import com.itextpdf.text.pdf.parser.PdfTextExtractor
 import com.revesystems.tts.core.BaseFragment
@@ -198,7 +197,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         try {
             pdfReader = PdfReader(inputStream)
             if (pdfReader.cryptoMode != -1) {
-                toast("data encrypted")
+                toast("Format not supported")
             }
             val pageCount = pdfReader.numberOfPages
             for (i in 0 until pageCount){
@@ -209,7 +208,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             binding!!.etText.setText(pdfTexts)
             binding!!.etText.movementMethod
         }catch (e:IOException){
-        }catch (e: java.lang.Exception){
+        }catch (e: ExceptionConverter){
+            Log.v("ADA","DA")
         }
     }
 
