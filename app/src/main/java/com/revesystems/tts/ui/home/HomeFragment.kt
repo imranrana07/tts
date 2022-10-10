@@ -17,24 +17,23 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextWatcher
 import android.text.style.BackgroundColorSpan
-import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-import androidx.core.net.UriCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.itextpdf.text.pdf.PdfReader
 import com.itextpdf.text.pdf.parser.PdfTextExtractor
-import com.revesystems.tts.R
 import com.revesystems.tts.core.BaseFragment
 import com.revesystems.tts.data.model.PlayListModel
 import com.revesystems.tts.data.model.ReqModel
 import com.revesystems.tts.databinding.FragmentHomeBinding
+import com.revesystems.tts.ui.SettingsBottomSheetFragment
 import com.revesystems.tts.utils.GONE
 import com.revesystems.tts.utils.INVISIBLE
 import com.revesystems.tts.utils.VISIBLE
@@ -42,8 +41,6 @@ import com.revesystems.tts.utils.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.*
-import java.net.URI
-import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
@@ -63,6 +60,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         if (it.resultCode == RESULT_OK && it != null) {
             controlVisibility(true)
             getTextsFromPdf(it.data?.data!!)
+            if (playerListening!= null)
+                playerListening?.reset()
+            lines.clear()
+            playList.clear()
+            binding?.includeSetting?.btnPlay?.visibility = VISIBLE
         }else{
             controlVisibility(false)
         }
@@ -78,77 +80,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private fun clickEvents(){
         binding!!.btnSelectPdf.setOnClickListener { selectPdf() }
         binding!!.btnSettings.setOnClickListener {
-            binding!!.includeSetting.groupSetting.visibility = VISIBLE
-            binding!!.includeSetting.btnPlay.visibility = GONE
-            binding!!.btnSettings.visibility = GONE
-            binding!!.btnSelectPdf.visibility = GONE
-        }
-        binding!!.includeSetting.btnSave.setOnClickListener {
-            binding!!.includeSetting.groupSetting.visibility = GONE
-            if (binding!!.includeSetting.playSetting.visibility != VISIBLE)
-                binding!!.includeSetting.btnPlay.visibility = VISIBLE
-            binding!!.btnSettings.visibility = VISIBLE
-            binding!!.btnSelectPdf.visibility = VISIBLE
-        }
-        binding!!.includeSetting.btnCancel.setOnClickListener {
-            binding!!.includeSetting.groupSetting.visibility = GONE
-            if (binding!!.includeSetting.playSetting.visibility != VISIBLE)
-                binding!!.includeSetting.btnPlay.visibility = VISIBLE
-            binding!!.btnSettings.visibility = VISIBLE
-            binding!!.btnSelectPdf.visibility = VISIBLE
+            val bottomSheet = SettingsBottomSheetFragment()
+            bottomSheet.show(requireActivity().supportFragmentManager,"")
+
         }
 
-        binding!!.includeSetting.tvAscii.setOnClickListener {
-            binding!!.includeSetting.tvAscii.setBackgroundResource(R.drawable.bg_r4_sol_136)
-            binding!!.includeSetting.tvAscii.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
-            binding!!.includeSetting.tvUnicode.setBackgroundResource(R.color.white)
-            binding!!.includeSetting.tvUnicode.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
-        }
-        binding!!.includeSetting.tvUnicode.setOnClickListener {
-            binding!!.includeSetting.tvAscii.setBackgroundResource(R.color.white)
-            binding!!.includeSetting.tvAscii.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
-            binding!!.includeSetting.tvUnicode.setBackgroundResource(R.drawable.bg_r4_sol_136)
-            binding!!.includeSetting.tvUnicode.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
-        }
-
-        binding!!.includeSetting.tvText.setOnClickListener {
-            binding!!.includeSetting.tvText.setBackgroundResource(R.drawable.bg_r4_sol_136)
-            binding!!.includeSetting.tvText.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
-            binding!!.includeSetting.tvSSML.setBackgroundResource(R.color.white)
-            binding!!.includeSetting.tvSSML.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
-        }
-        binding!!.includeSetting.tvSSML.setOnClickListener {
-            binding!!.includeSetting.tvText.setBackgroundResource(R.color.white)
-            binding!!.includeSetting.tvText.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
-            binding!!.includeSetting.tvSSML.setBackgroundResource(R.drawable.bg_r4_sol_136)
-            binding!!.includeSetting.tvSSML.setTextColor(ContextCompat.getColor(requireContext(),R.color.white))
-        }
-
-        binding!!.includeSetting.tvMale.setOnClickListener {
-            binding!!.includeSetting.tvMale.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
-            binding!!.includeSetting.tvMale.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
-            binding!!.includeSetting.tvFemale.setBackgroundResource(R.color.white)
-            binding!!.includeSetting.tvFemale.setTextColor(ContextCompat.getColor(requireContext(),R.color._999DA7))
-        }
-        binding!!.includeSetting.tvFemale.setOnClickListener {
-            binding!!.includeSetting.tvMale.setBackgroundResource(R.color.white)
-            binding!!.includeSetting.tvMale.setTextColor(ContextCompat.getColor(requireContext(),R.color._999DA7))
-            binding!!.includeSetting.tvFemale.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
-            binding!!.includeSetting.tvFemale.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
-        }
-
-        binding!!.includeSetting.tvImmature.setOnClickListener {
-            binding!!.includeSetting.tvImmature.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
-            binding!!.includeSetting.tvImmature.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
-            binding!!.includeSetting.tvMature.setBackgroundResource(R.color.white)
-            binding!!.includeSetting.tvMature.setTextColor(ContextCompat.getColor(requireContext(),R.color._999DA7))
-        }
-        binding!!.includeSetting.tvMature.setOnClickListener {
-            binding!!.includeSetting.tvImmature.setBackgroundResource(R.color.white)
-            binding!!.includeSetting.tvImmature.setTextColor(ContextCompat.getColor(requireContext(),R.color._999DA7))
-            binding!!.includeSetting.tvMature.setBackgroundResource(R.drawable.bg_r4_sol_fafa)
-            binding!!.includeSetting.tvMature.setTextColor(ContextCompat.getColor(requireContext(),R.color._136EE5))
-        }
 
         binding!!.includeSetting.btnPlayBlue.setOnClickListener {
             isPaused = false
@@ -172,7 +108,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         binding!!.includeSetting.btnPlay.setOnClickListener {
-            seekBarChange(8000)
+//            seekBarChange(8000)
             isPaused = false
             binding!!.includeSetting.btnPlay.visibility = GONE
             binding!!.includeSetting.playSetting.visibility = VISIBLE
@@ -197,10 +133,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
         viewModel.success.observe(this) {
             playOnlineAudio()
-            url = it?.output!!
+//            url = it?.output!!
             it?.output?.let {
-                    it1 -> playList.add(PlayListModel(lines[0],it1))
+                    it1 ->if (lines.isNotEmpty()) {
+                playList.add(PlayListModel(lines[0], it1))
                 lines.removeAt(0)
+            }
                 if (lines.isNotEmpty())
                     viewModel.getAudio(ReqModel(lines[0]))
             }
@@ -208,6 +146,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
         viewModel.error.observe(this) {
             Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+            if (playerListening?.isPlaying == true || playerListening!= null){
+                playerListening?.reset()
+                isPlaying = false
+            }
         }
     }
 
@@ -223,12 +165,14 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             binding!!.tvLetterCount.text = "${p0.toString().length}/2500"
         }
     }
+
     private fun selectPdf(){
         val pdfIntent = Intent(Intent.ACTION_GET_CONTENT)
         pdfIntent.type = "application/pdf"
         pdfIntent.addCategory(Intent.CATEGORY_OPENABLE)
         resultLauncher.launch(pdfIntent)
     }
+
     private fun controlVisibility(shouldVisible:Boolean){
 //        if (shouldVisible) {
 //            binding!!.pdfViewer.visibility = VISIBLE
@@ -240,6 +184,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 //            binding!!.tvLetterCount.visibility = VISIBLE
 //        }
     }
+
     private fun getTextsFromPdf(uri: Uri){
         var pdfTexts = ""
         val stringBuilder = StringBuilder()
@@ -262,6 +207,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             stringBuilder.append(pdfTexts)
             pdfReader.close()
             binding!!.etText.setText(pdfTexts)
+            binding!!.etText.movementMethod
         }catch (e:IOException){
         }catch (e: java.lang.Exception){
         }
@@ -348,6 +294,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
     @SuppressLint("NewApi")
     private fun playOnlineAudio() {
+        Log.v("ASSADddad","$playList ,\n $lines")
         if (playList.isEmpty() || playerListening?.isPlaying == true) {
             return
         }
@@ -363,7 +310,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                 playerListening?.setDataSource("data:audio/wav;base64,${playList[0].url}")
                 playerListening?.prepareAsync()
                 playerListening?.setOnPreparedListener {
-                    if (isPaused)
+                    if (isPaused || isPlaying)
                         return@setOnPreparedListener
                     highlightText(playList[0].word)
 //                    seekBarChange(playerListening?.duration!!.toLong())
@@ -379,7 +326,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                             playOnlineAudio()
                         }else{
                             binding!!.includeSetting.playSetting.visibility = GONE
-                            binding!!.includeSetting.groupSetting.visibility = GONE
                             binding!!.includeSetting.btnPlay.visibility = VISIBLE
                             startingPoint = 0
                         }

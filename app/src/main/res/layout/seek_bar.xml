@@ -9,17 +9,18 @@
     <androidx.appcompat.widget.AppCompatSeekBar
         android:id="@+id/seekBar"
         style="@style/Widget.AppCompat.SeekBar.Discrete"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:max="4"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:progress="2"
-        android:thumbTint="@color/_136EE5"
+        android:thumbTint="@color/white"
         android:progressBackgroundTint="@color/_303030"
         app:tickMarkTint="@color/_F6F9FF"
-        android:minWidth="0dp"
+        android:paddingStart="@dimen/dp_6"
+        android:paddingEnd="@dimen/dp_6"
         android:tickMarkTint="@color/_303030"
         tools:ignore="UnusedAttribute" />
 
