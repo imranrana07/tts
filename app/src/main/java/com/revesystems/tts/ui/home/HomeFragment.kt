@@ -72,6 +72,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     override fun setLayout(inflater: LayoutInflater, container: ViewGroup?): FragmentHomeBinding = FragmentHomeBinding.inflate(layoutInflater)
     override fun setViewModel(): Class<HomeViewModel>  = HomeViewModel::class.java
     override fun init(savedInstanceState: Bundle?) {
+        playerListening = MediaPlayer()
         binding!!.etText.addTextChangedListener(tvWatcher)
         clickEvents()
         observers()
@@ -139,10 +140,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             it?.output?.let {
                     it1 ->if (lines.isNotEmpty()) {
                 playList.add(PlayListModel(lines[0], it1))
-                Log.v("playList ","$playList")
+//                Log.v("playList ","${playList.size}")
                 lines.removeAt(0)
-                if (!isPlaying || playerListening?.isPlaying == false)
+                Log.v("lines "," lines ${lines.size}")
+                if (!isPlaying || playerListening?.isPlaying == false) {
                     playOnlineAudio()
+                }
             }
                 if (lines.isNotEmpty())
                     viewModel.getAudio(ReqModel(lines[0]))
@@ -293,27 +296,36 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     }
 
     private fun splitTexts(){
-            val delimiter = " "
-            lines.addAll(binding!!.etText.text?.trim().toString().split(delimiter).toTypedArray())
+        val regex = Regex("[।,.|!]")
+        val delimiter = " "
+        viewLifecycleOwner.lifecycleScope.launch {
+            val splitText = binding!!.etText.text?.trim().toString().split(delimiter).toTypedArray()
+            for (i in splitText.indices){
+                if (splitText[i].contains(regex))
+                    lines.add(splitText[i].replace(regex,""))
+                else
+                    lines.add(splitText[i])
+            }
             viewModel.getAudio(ReqModel(lines[0]))
+        }
+
     }
 
     @SuppressLint("NewApi")
     private fun playOnlineAudio() {
-
         if (playList.isEmpty() || playerListening?.isPlaying == true || isPlaying) {
             return
         }
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
-                playerListening?.release()
-                playerListening = MediaPlayer()
                 playerListening?.setAudioAttributes(
                     AudioAttributes.Builder()
                         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                         .setUsage(AudioAttributes.USAGE_MEDIA)
                         .build()
                 )
+                if (playList.isEmpty())
+                    return@launch
                 playerListening?.setDataSource("data:audio/wav;base64,${playList[0].url}")
                 playerListening?.prepareAsync()
                 playerListening?.setOnPreparedListener {
@@ -326,6 +338,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                 }
                 playerListening?.setOnErrorListener { mediaPlayer, i, i2 ->
 //                    playOnlineAudio()
+                    Log.v("Sasfsdfs","")
                     true
                 }
                 playerListening?.setOnCompletionListener {
@@ -333,13 +346,25 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                     playerListening?.reset()
                     if (playList.isNotEmpty()) {
                         playList.removeAt(0)
-                        if (playList.isNotEmpty() && playerListening?.isPlaying == false && !isPlaying) {
+                        if (lines.isNotEmpty() || playList.isNotEmpty()) {
+                            isPlaying = false
+                            playOnlineAudio()
+                            return@setOnCompletionListener
+                        }
+                        binding!!.includeSetting.playSetting.visibility = GONE
+                        binding!!.includeSetting.btnPlay.visibility = VISIBLE
+                        startingPoint = 0
+                        /*if ( playerListening?.isPlaying == false && !isPlaying) {
                             playOnlineAudio()
                         }else{
+                            if (lines.isNotEmpty()) {
+                                isPlaying = false
+                                return@setOnCompletionListener
+                            }
                             binding!!.includeSetting.playSetting.visibility = GONE
                             binding!!.includeSetting.btnPlay.visibility = VISIBLE
                             startingPoint = 0
-                        }
+                        }*/
                     }
                     isPlaying = false
                 }
