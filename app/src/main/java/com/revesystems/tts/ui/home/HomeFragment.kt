@@ -6,12 +6,13 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.media.AudioAttributes
-import android.media.MediaPlayer
+import android.media.*
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Environment
+import android.provider.UserDictionary.Words.FREQUENCY
 import android.text.Editable
 import android.text.Spannable
 import android.text.SpannableString
@@ -28,6 +29,7 @@ import androidx.lifecycle.lifecycleScope
 import com.itextpdf.text.ExceptionConverter
 import com.itextpdf.text.pdf.PdfReader
 import com.itextpdf.text.pdf.parser.PdfTextExtractor
+import com.itextpdf.xmp.impl.Base64
 import com.revesystems.tts.core.BaseFragment
 import com.revesystems.tts.data.model.PlayListModel
 import com.revesystems.tts.data.model.ReqModel
@@ -44,7 +46,7 @@ import java.nio.charset.StandardCharsets
 
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private lateinit var inputStream: InputStream
-//    private var currentSBPosition = 0
+    //    private var currentSBPosition = 0
     private var playerListening: MediaPlayer?=null
     private var lines = ArrayList<String>()
     private var playList = ArrayList<PlayListModel>()
@@ -136,19 +138,19 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
         viewModel.success.observe(this) {
             retry = 0
-//            url = it?.output!!
+            url = it?.output!!
+            Log.v("it?.output  ","${playList.size}")
             it?.output?.let {
                     it1 ->if (lines.isNotEmpty()) {
                 playList.add(PlayListModel(lines[0], it1))
-//                Log.v("playList ","${playList.size}")
                 lines.removeAt(0)
                 Log.v("lines "," lines ${lines.size}")
                 if (!isPlaying || playerListening?.isPlaying == false) {
-                    playOnlineAudio()
+//                    playOnlineAudio()
                 }
             }
-                if (lines.isNotEmpty())
-                    viewModel.getAudio(ReqModel(lines[0]))
+//                if (lines.isNotEmpty())
+//                    viewModel.getAudio(ReqModel(lines[0]))
             }
         }
 
@@ -280,19 +282,20 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
     @SuppressLint("NewApi")
     private fun saveAudio(){
-        val decoded = java.util.Base64.getUrlDecoder().decode("data:audio/wav;base64,$url")
-        val downloadManager = requireContext().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager?
-        val stringUrl = String(decoded,StandardCharsets.UTF_8)
-        val uri = stringUrl.toUri()//Uri.parse("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
-        val request = DownloadManager.Request(uri)
-//        request.setVisibleInDownloadsUi(true)
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        request.setDestinationInExternalPublicDir(
-            Environment.DIRECTORY_DOWNLOADS,
-            uri.lastPathSegment
-        )
-        toast("download started")
-        downloadManager!!.enqueue(request)
+        playByte(url)
+//        val decoded = java.util.Base64.getUrlDecoder().decode("data:audio/wav;base64,$url")
+//        val downloadManager = requireContext().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager?
+//        val stringUrl = String(decoded,StandardCharsets.UTF_8)
+//        val uri = stringUrl.toUri()//Uri.parse("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
+//        val request = DownloadManager.Request(uri)
+////        request.setVisibleInDownloadsUi(true)
+//        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+//        request.setDestinationInExternalPublicDir(
+//            Environment.DIRECTORY_DOWNLOADS,
+//            uri.lastPathSegment
+//        )
+//        toast("download started")
+//        downloadManager!!.enqueue(request)
     }
 
     private fun splitTexts(){
@@ -306,7 +309,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                 else
                     lines.add(splitText[i])
             }
-            viewModel.getAudio(ReqModel(lines[0]))
+            viewModel.getAudio(ReqModel(binding!!.etText.text?.trim().toString()/*lines[0]*/))
         }
 
     }
@@ -393,4 +396,60 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             startingPoint += text.length + 1
         }
     }
+
+    private fun playByte(data:String){
+        if (data.isEmpty()) {
+            toast("null")
+            return
+        }
+        val mp3SoundByteArray = Base64.decode(data).toByteArray()
+//        val audioTrack = AudioTrack(
+//            AudioManager.STREAM_MUSIC,
+//            44100, AudioFormat.CHANNEL_OUT_MONO,
+//            AudioFormat.ENCODING_PCM_16BIT, data.length,
+//            AudioTrack.MODE_STREAM)
+        audioTrack.write(mp3SoundByteArray,0,data.length)
+        audioTrack.play()
+        /*val mediaPlayer = MediaPlayer()
+        try {
+            val tempMp3 = File.createTempFile("kurchina", "mp3", requireActivity().cacheDir)
+            tempMp3.deleteOnExit()
+            val fos = FileOutputStream(tempMp3)
+            fos.write(mp3SoundByteArray)
+            fos.close()
+            val fis = FileInputStream(tempMp3)
+            mediaPlayer.setDataSource(fis.fd)
+            mediaPlayer.prepareAsync()
+            mediaPlayer.start()
+        }catch (e:Exception){
+            toast(e.message!!)
+        }*/
+    }
+
+    val FREQUENCY = 44100
+    val SOUND_BUFFER_SIZE = AudioTrack.getMinBufferSize(8000, AudioFormat.CHANNEL_CONFIGURATION_MONO,
+        AudioFormat.ENCODING_PCM_8BIT);
+    val audioTrack: AudioTrack
+        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            AudioTrack(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build(),
+                AudioFormat.Builder()
+                    .setSampleRate(FREQUENCY)
+                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build(),
+                SOUND_BUFFER_SIZE,
+                AudioTrack.MODE_STREAM,
+                AudioManager.AUDIO_SESSION_ID_GENERATE)
+        } else {
+            //support for Android KitKat
+            AudioTrack(AudioManager.STREAM_MUSIC,
+                FREQUENCY,
+                AudioFormat.CHANNEL_OUT_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                SOUND_BUFFER_SIZE,
+                AudioTrack.MODE_STREAM)
+        }
 }
