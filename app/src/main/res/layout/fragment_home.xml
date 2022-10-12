@@ -50,7 +50,7 @@
             android:background="@drawable/bg_r6_sol_ff"
             android:gravity="start"
             android:hint="@string/hint_write"
-            android:text="দক্ষিণ কলকাতার মোমিনপুরে দোকান ও বাইক ভাঙচুরের অভিযোগ ওঠে গতকাল লক্ষ্মীপুজোর দিন। এরপর ইকবালপুর থানায় ভাঙচুরের অভিযোগও ওঠে। এই আবহে আজকে সেই এলাকা পরিদর্শন করতে যাচ্ছিলেন সুকান্ত।"
+            android:text="@string/sample_text"
             android:textColorHint="@color/_C7C9CB"
             android:textColor="@color/_303030"
             android:textSize="@dimen/sp_16"/>
