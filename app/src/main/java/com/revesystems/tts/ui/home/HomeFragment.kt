@@ -53,6 +53,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private var startingPoint = 0
     private var currentPlayPosition = 0
     private var url = ""
+    private var retry = 0
 
     // Initialize result launcher
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
@@ -107,6 +108,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         binding!!.includeSetting.btnPlay.setOnClickListener {
+            lines.clear()
+            playList.clear()
 //            seekBarChange(8000)
             isPaused = false
             binding!!.includeSetting.btnPlay.visibility = GONE
@@ -131,12 +134,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         viewModel.success.observe(this) {
-            playOnlineAudio()
+            retry = 0
 //            url = it?.output!!
             it?.output?.let {
                     it1 ->if (lines.isNotEmpty()) {
                 playList.add(PlayListModel(lines[0], it1))
+                Log.v("playList ","$playList")
                 lines.removeAt(0)
+                if (!isPlaying || playerListening?.isPlaying == false)
+                    playOnlineAudio()
             }
                 if (lines.isNotEmpty())
                     viewModel.getAudio(ReqModel(lines[0]))
@@ -144,10 +150,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         viewModel.error.observe(this) {
+            retry += 1
             Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
-            if (playerListening?.isPlaying == true || playerListening!= null){
-                playerListening?.reset()
-                isPlaying = false
+            if (retry <4){
+                if (lines.isNotEmpty())
+                    viewModel.getAudio(ReqModel(lines[0]))
             }
         }
     }
@@ -209,7 +216,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             binding!!.etText.movementMethod
         }catch (e:IOException){
         }catch (e: ExceptionConverter){
-            Log.v("ADA","DA")
         }
     }
 
@@ -294,12 +300,13 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
     @SuppressLint("NewApi")
     private fun playOnlineAudio() {
-        Log.v("ASSADddad","$playList ,\n $lines")
-        if (playList.isEmpty() || playerListening?.isPlaying == true) {
+
+        if (playList.isEmpty() || playerListening?.isPlaying == true || isPlaying) {
             return
         }
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
+                playerListening?.release()
                 playerListening = MediaPlayer()
                 playerListening?.setAudioAttributes(
                     AudioAttributes.Builder()
@@ -312,17 +319,21 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                 playerListening?.setOnPreparedListener {
                     if (isPaused || isPlaying)
                         return@setOnPreparedListener
-                    highlightText(playList[0].word)
+//                    highlightText(playList[0].word)
 //                    seekBarChange(playerListening?.duration!!.toLong())
                     playerListening?.start()
                     isPlaying = true
+                }
+                playerListening?.setOnErrorListener { mediaPlayer, i, i2 ->
+//                    playOnlineAudio()
+                    true
                 }
                 playerListening?.setOnCompletionListener {
                     playerListening?.stop()
                     playerListening?.reset()
                     if (playList.isNotEmpty()) {
                         playList.removeAt(0)
-                        if (playList.isNotEmpty()) {
+                        if (playList.isNotEmpty() && playerListening?.isPlaying == false && !isPlaying) {
                             playOnlineAudio()
                         }else{
                             binding!!.includeSetting.playSetting.visibility = GONE
