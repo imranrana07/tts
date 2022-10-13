@@ -81,6 +81,10 @@ dependencies {
     implementation 'com.itextpdf:itextg:5.5.10'
     implementation 'com.madgag.spongycastle:core:1.58.0.0'
 
+    //exoplayer
+    implementation 'androidx.media3:media3-exoplayer:1.0.0-beta02'
+//    implementation "androidx.media3:media3-ui:1.0.0-beta02"
+//    implementation "androidx.media3:media3-exoplayer-dash:1.0.0-beta02"
     //leakcanary
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
 }
