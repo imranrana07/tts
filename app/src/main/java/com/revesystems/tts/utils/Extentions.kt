@@ -3,6 +3,7 @@ package com.revesystems.tts.utils
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.FileUtils
+import android.provider.Settings.Global.putLong
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
@@ -14,6 +15,7 @@ import androidx.core.app.ActivityCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.nio.ByteBuffer
 
 
 fun hasPermissions(context: Context, permissions: Array<String>): Boolean = permissions.all {
@@ -62,3 +64,14 @@ fun TextView.changeColor(forText: String, foregroundColor: Int? = null, style: S
     // apply it
     text = spannable
 }
+
+fun Long.toByteArray() = numberToByteArray(Long.SIZE_BYTES) { putLong(this@toByteArray) }
+private inline fun numberToByteArray(size: Int, bufferFun: ByteBuffer.() -> ByteBuffer): ByteArray =
+    ByteBuffer.allocate(size).bufferFun().array()
+
+fun shortToByteArray(s: Short): ByteArray {
+    return byteArrayOf((s.toInt() and 0x00FF).toByte(), ((s.toInt() and 0xFF00) shr (8)).toByte())
+}
+
+fun intToBytes(i: Int): ByteArray =
+    ByteBuffer.allocate(Int.SIZE_BYTES).putInt(i).array()

@@ -2,11 +2,12 @@ package com.revesystems.tts.ui.home
 
 import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.media.*
-import android.media.AudioManager.STREAM_MUSIC
-import android.media.browse.MediaBrowser
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -17,7 +18,6 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextWatcher
 import android.text.style.BackgroundColorSpan
-import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -26,14 +26,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
-import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaItem.fromUri
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.navigation.NavDeepLinkRequest.Builder.Companion.fromUri
 import com.itextpdf.text.ExceptionConverter
 import com.itextpdf.text.pdf.PdfReader
 import com.itextpdf.text.pdf.parser.PdfTextExtractor
-import com.itextpdf.xmp.impl.Base64
 import com.revesystems.tts.core.BaseFragment
 import com.revesystems.tts.data.model.PlayListModel
 import com.revesystems.tts.data.model.ReqModel
@@ -47,6 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.*
 
+
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private lateinit var inputStream: InputStream
     //    private var currentSBPosition = 0
@@ -59,7 +55,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private var currentPlayPosition = 0
     private var url = ""
     private var retry = 0
-    private var player: ExoPlayer? = null
 
     // Initialize result launcher
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
@@ -75,15 +70,20 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             controlVisibility(false)
         }
     }
+
     override fun setLayout(inflater: LayoutInflater, container: ViewGroup?): FragmentHomeBinding = FragmentHomeBinding.inflate(layoutInflater)
     override fun setViewModel(): Class<HomeViewModel>  = HomeViewModel::class.java
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun init(savedInstanceState: Bundle?) {
-        playerListening = MediaPlayer()
+
+//        playerListening = MediaPlayer()
         binding!!.etText.addTextChangedListener(tvWatcher)
         clickEvents()
         observers()
+        binding!!.tvLetterCount.text = "${binding!!.etText.text.toString().length}/2500"
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun clickEvents(){
         binding!!.btnSelectPdf.setOnClickListener { selectPdf() }
         binding!!.btnSettings.setOnClickListener {
@@ -91,7 +91,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             bottomSheet.show(requireActivity().supportFragmentManager,"")
 
         }
-
 
         binding!!.includeSetting.btnPlayBlue.setOnClickListener {
             isPaused = false
@@ -115,17 +114,16 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         binding!!.includeSetting.btnPlay.setOnClickListener {
-            initializePlayer()
-//            lines.clear()
-//            playList.clear()
-////            seekBarChange(8000)
-//            isPaused = false
-//            binding!!.includeSetting.btnPlay.visibility = GONE
-//            binding!!.includeSetting.playSetting.visibility = VISIBLE
-//            binding!!.includeSetting.btnPlayBlue.visibility = INVISIBLE
-//            binding!!.includeSetting.btnPause.visibility = VISIBLE
-//            splitTexts()
-//            currentPlayPosition = 0l
+            lines.clear()
+            playList.clear()
+//            seekBarChange(8000)
+            isPaused = false
+            binding!!.includeSetting.btnPlay.visibility = GONE
+            binding!!.includeSetting.playSetting.visibility = VISIBLE
+            binding!!.includeSetting.btnPlayBlue.visibility = INVISIBLE
+            binding!!.includeSetting.btnPause.visibility = VISIBLE
+            splitTexts()
+            currentPlayPosition = 0
         }
 
         binding!!.includeSetting.btnDownloadTxt.setOnClickListener {
@@ -137,6 +135,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun observers(){
         viewModel.progressBar.observe(this) {
             binding?.progressBar?.visibility = it
@@ -144,7 +143,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
         viewModel.success.observe(this) {
             retry = 0
-            url = it?.output!!
+
             it?.output?.let {
                     it1 ->if (lines.isNotEmpty()) {
                 playList.add(PlayListModel(lines[0], it1))
@@ -154,8 +153,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 //                    playOnlineAudio()
                 }
             }
-//                if (lines.isNotEmpty())
-//                    viewModel.getAudio(ReqModel(lines[0]))
+                if (lines.isNotEmpty())
+                    viewModel.getAudio(ReqModel(lines[0]))
+                playByte(it.output)
             }
         }
 
@@ -287,7 +287,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
     @SuppressLint("NewApi")
     private fun saveAudio(){
-        playByte(url)
+
 //        val decoded = java.util.Base64.getUrlDecoder().decode("data:audio/wav;base64,$url")
 //        val downloadManager = requireContext().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager?
 //        val stringUrl = String(decoded,StandardCharsets.UTF_8)
@@ -307,16 +307,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         val regex = Regex("[।,.|!]")
         val delimiter = " "
         viewLifecycleOwner.lifecycleScope.launch {
-            val splitText = binding!!.etText.text?.trim().toString().split(delimiter).toTypedArray()
+            val splitText = binding!!.etText.text?.trim().toString().chunked(800)//.split(delimiter).toTypedArray()
             for (i in splitText.indices){
-                if (splitText[i].contains(regex))
-                    lines.add(splitText[i].replace(regex,""))
-                else
+//                if (splitText[i].contains(regex))
+//                    lines.add(splitText[i].replace(regex,""))
+//                else
                     lines.add(splitText[i])
             }
-            viewModel.getAudio(ReqModel(binding!!.etText.text?.trim().toString()/*lines[0]*/))
+            viewModel.getAudio(ReqModel(/*binding!!.etText.text?.trim().toString()*/lines[0]))
         }
-
     }
 
     @SuppressLint("NewApi")
@@ -402,67 +401,36 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
-    private fun playByte(data:String){
-        if (data.isEmpty()) {
-            toast("null")
-            return
-        }
-        val mp3SoundByteArray = Base64.decode(data)
-        exoPlayer(mp3SoundByteArray)
-        /*val bufferSize = AudioTrack.getMinBufferSize(
-            44100,
-            AudioFormat.CHANNEL_OUT_MONO,
-            AudioFormat.ENCODING_PCM_16BIT)
-        val audioTrack = AudioTrack(
-            STREAM_MUSIC,
-            44100,
-            AudioFormat.CHANNEL_OUT_MONO,
-            AudioFormat.ENCODING_PCM_16BIT,
-            bufferSize,
-            AudioTrack.MODE_STREAM)
-        audioTrack.write(mp3SoundByteArray,0,AudioTrack.WRITE_BLOCKING)
-        audioTrack.play()*/
-        /*val soundFile = File(Environment.getExternalStorageDirectory().absolutePath + "AudioRecording/")
-        soundFile.mkdirs()
-        val file = requireContext().getExternalFilesDir(null)?.absolutePath + "/audioRecording1.mp3"//File(soundFile, "audiofile.mp3")
+    private fun playByte(data:String?=null){
+        val clipData =android.util.Base64.decode(data,0)
         val mediaPlayer = MediaPlayer()
-        try {
-            val output = FileOutputStream(file)
-            output.write(mp3SoundByteArray)
-            output.close()
-            val fis = FileInputStream(file)
-            mediaPlayer.setDataSource(fis.fd)
-            mediaPlayer.setAudioAttributes(
-                AudioAttributes.Builder().
-                setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).
-                setUsage(AudioAttributes.USAGE_MEDIA).
-                build())
-            mediaPlayer.prepareAsync()
-            mediaPlayer.setOnPreparedListener {
-                mediaPlayer.start()
-            }
-            mediaPlayer.setOnErrorListener { mediaPlayer, i, i2 ->
+        mediaPlayer.setAudioAttributes(AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).setUsage(AudioAttributes.USAGE_MEDIA).build())
 
-                Log.v("","")
-                true
-            }
+        val soundFile = File(Environment.getExternalStorageDirectory().absolutePath + "/AudioRecording")
+        soundFile.mkdirs()
+        val file= File(soundFile.path, "/audioRecording1.wav")//File(soundFile, "audioFile.mp3")
+        try {
+            val output = FileOutputStream(file,true)
+//            requireContext().openFileOutput("audioRecording1.wav", Context.MODE_PRIVATE).use {
+//                it.write(clipData)
+//                it.close()
+//            }
+//            output.write()
+            output.write(clipData)
+            output.close()
+
+//            mediaPlayer.setDataSource(file.path)
+//            mediaPlayer.prepareAsync()
+//            mediaPlayer.setOnPreparedListener {
+//                mediaPlayer.start()
+//            }
+//            mediaPlayer.setOnErrorListener { mediaPlayer, i, i2 ->
+//
+//                Log.v("","${mediaPlayer.playbackParams}")
+//                true
+//            }
         }catch (e:Exception){
             toast(e.message!!)
-        }*/
-    }
-
-    private fun exoPlayer(data:String){
-        initializePlayer(data)
-    }
-
-    private fun initializePlayer(data:String?=null) {
-        player = ExoPlayer.Builder(requireContext())
-            .build()
-            .apply {
-                setMediaItem(fromUri("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"))
-            }
-
-        player?.prepare()
-        player?.play()
+        }
     }
 }

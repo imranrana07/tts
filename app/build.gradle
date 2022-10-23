@@ -58,6 +58,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+//    implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
 
     //image load library
     implementation 'com.github.bumptech.glide:glide:4.12.0'
@@ -82,9 +83,9 @@ dependencies {
     implementation 'com.madgag.spongycastle:core:1.58.0.0'
 
     //exoplayer
-    implementation 'androidx.media3:media3-exoplayer:1.0.0-beta02'
+//    implementation 'androidx.media3:media3-exoplayer:1.0.0-beta02'
 //    implementation "androidx.media3:media3-ui:1.0.0-beta02"
 //    implementation "androidx.media3:media3-exoplayer-dash:1.0.0-beta02"
     //leakcanary
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
+//    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
 }
