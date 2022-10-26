@@ -72,6 +72,8 @@ private inline fun numberToByteArray(size: Int, bufferFun: ByteBuffer.() -> Byte
 fun shortToByteArray(s: Short): ByteArray {
     return byteArrayOf((s.toInt() and 0x00FF).toByte(), ((s.toInt() and 0xFF00) shr (8)).toByte())
 }
+fun numberToByteArray (data: Number, size: Int = 4) : ByteArray =
+    ByteArray (size) {i -> (data.toLong() shr (i*8)).toByte()}
 
 fun intToBytes(i: Int): ByteArray =
     ByteBuffer.allocate(Int.SIZE_BYTES).putInt(i).array()

@@ -11,7 +11,11 @@ import java.security.KeyStore
 import java.security.SecureRandom
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
-import javax.net.ssl.*
+import javax.net.ssl.HostnameVerifier
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 object RetrofitClient {
     val gson = GsonBuilder().setLenient().create()
@@ -28,7 +32,6 @@ object RetrofitClient {
                 .baseUrl(BASE_URL)
                 .client(client)
                 .client(getUnsafeOkHttpClient()!!)
-//                .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build()
         }

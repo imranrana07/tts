@@ -2,11 +2,9 @@ package com.revesystems.tts.ui.home
 
 import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
-import android.media.AudioFormat
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
@@ -34,13 +32,14 @@ import com.revesystems.tts.data.model.PlayListModel
 import com.revesystems.tts.data.model.ReqModel
 import com.revesystems.tts.databinding.FragmentHomeBinding
 import com.revesystems.tts.ui.SettingsBottomSheetFragment
-import com.revesystems.tts.utils.GONE
-import com.revesystems.tts.utils.INVISIBLE
-import com.revesystems.tts.utils.VISIBLE
-import com.revesystems.tts.utils.toast
+import com.revesystems.tts.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.*
+import java.lang.Short.reverseBytes
+import java.nio.ByteBuffer
+import java.nio.ByteOrder.BIG_ENDIAN
+import java.nio.ByteOrder.LITTLE_ENDIAN
 
 
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
@@ -55,6 +54,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private var currentPlayPosition = 0
     private var url = ""
     private var retry = 0
+    private var count = 0
+    private var allByteArray = ArrayList<ByteArray>()
+    private var chunkSize = 0
+    private var totalDataSize = 0
+    private var subChunk2Size = 0
 
     // Initialize result launcher
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
@@ -148,14 +152,14 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                     it1 ->if (lines.isNotEmpty()) {
                 playList.add(PlayListModel(lines[0], it1))
                 lines.removeAt(0)
-                Log.v("lineslines "," lines ${lines.size}")
+                playByte(it1)
                 if (!isPlaying || playerListening?.isPlaying == false) {
 //                    playOnlineAudio()
                 }
             }
+
                 if (lines.isNotEmpty())
                     viewModel.getAudio(ReqModel(lines[0]))
-                playByte(it.output)
             }
         }
 
@@ -400,9 +404,29 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
     }
 
+    private fun byteArrayToNumber(bytes: ByteArray?, numOfBytes: Int, type: Int): ByteBuffer {
+        val buffer: ByteBuffer = ByteBuffer.allocate(numOfBytes)
+        if (type == 0) {
+            buffer.order(BIG_ENDIAN)
+        } else {
+            buffer.order(LITTLE_ENDIAN)
+        }
+        buffer.put(bytes)
+        buffer.rewind()
+        return buffer
+    }
+
     @RequiresApi(Build.VERSION_CODES.M)
     private fun playByte(data:String?=null){
+
         val clipData =android.util.Base64.decode(data,0)
+        subChunk2Size += byteArrayToNumber(byteArrayOf(clipData[40],clipData[41],clipData[42],clipData[43]),4,1).int
+        chunkSize += byteArrayToNumber(byteArrayOf(clipData[4],clipData[5],clipData[6],clipData[7]),4,1).int
+        allByteArray.add(clipData)
+        totalDataSize += clipData.size
+
+        if (lines.isNotEmpty())
+            return
         val mediaPlayer = MediaPlayer()
         mediaPlayer.setAudioAttributes(AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).setUsage(AudioAttributes.USAGE_MEDIA).build())
 
@@ -411,24 +435,19 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         val file= File(soundFile.path, "/audioRecording1.wav")//File(soundFile, "audioFile.mp3")
         try {
             val output = FileOutputStream(file,true)
-//            requireContext().openFileOutput("audioRecording1.wav", Context.MODE_PRIVATE).use {
-//                it.write(clipData)
-//                it.close()
-//            }
-//            output.write()
-            output.write(clipData)
+            for (i in 0 until allByteArray.size){
+                if (i>0) {
+                    val bytes = allByteArray[i]//allByteArray[i].copyOfRange(44, allByteArray[i].size)
+                    output.write(bytes)
+                }else{
+                    allByteArray[i][40] = numberToByteArray(subChunk2Size)[0]
+                    allByteArray[i][41] = numberToByteArray(subChunk2Size)[1]
+                    allByteArray[i][42] = numberToByteArray(subChunk2Size)[2]
+                    allByteArray[i][43] = numberToByteArray(subChunk2Size)[3]
+                    output.write(allByteArray[i])
+                }
+            }
             output.close()
-
-//            mediaPlayer.setDataSource(file.path)
-//            mediaPlayer.prepareAsync()
-//            mediaPlayer.setOnPreparedListener {
-//                mediaPlayer.start()
-//            }
-//            mediaPlayer.setOnErrorListener { mediaPlayer, i, i2 ->
-//
-//                Log.v("","${mediaPlayer.playbackParams}")
-//                true
-//            }
         }catch (e:Exception){
             toast(e.message!!)
         }
