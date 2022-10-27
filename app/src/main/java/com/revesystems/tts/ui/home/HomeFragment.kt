@@ -50,6 +50,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     //    private var currentSBPosition = 0
     private var playerListening: MediaPlayer?=null
     private var lines = ArrayList<String>()
+    private var downloadTextList = ArrayList<String>()
     private var playList = ArrayList<PlayListModel>()
     private var isPlaying = false
     private var isPaused = false
@@ -57,12 +58,14 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private var currentPlayPosition = 0
     private var url = ""
     private var retry = 0
+    private var retryDownload = 0
     private var timeCount = 0
     private var allByteArray = ArrayList<ByteArray>()
     private var chunkSize = 0
     private var totalDataSize = 0
     private var subChunk2Size = 0
     private val regex = Regex("[।,.|!]")
+    private var currentTime:Long? = null
 
     // Initialize result launcher
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
@@ -80,10 +83,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     }
 
     override fun setLayout(inflater: LayoutInflater, container: ViewGroup?): FragmentHomeBinding = FragmentHomeBinding.inflate(layoutInflater)
+
     override fun setViewModel(): Class<HomeViewModel>  = HomeViewModel::class.java
+
     @RequiresApi(Build.VERSION_CODES.M)
     override fun init(savedInstanceState: Bundle?) {
-
         playerListening = MediaPlayer()
         binding!!.etText.addTextChangedListener(tvWatcher)
         clickEvents()
@@ -139,19 +143,19 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 //            saveFile()
 //        }
 //
-//        binding!!.includeSetting.btnDownloadAudio.setOnClickListener {
-//            saveAudio()
-//        }
+        binding!!.includeSetting.btnDownloadEnabled.setOnClickListener {
+            currentTime = System.currentTimeMillis()
+            downloadAudio()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     private fun observers(){
         viewModel.progressBar.observe(this) {
-//            binding?.progressBar?.visibility = it
+            binding?.progressBar?.visibility = it
         }
 
         viewModel.success.observe(this) {
-
             retry = 0
             it?.output?.let {
                     it1 ->if (lines.isNotEmpty()) {
@@ -162,7 +166,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                     playOnlineAudio()
                 }
             }
-
                 if (lines.isNotEmpty()) {
                     reqWord()
                 }
@@ -175,6 +178,25 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             if (retry <4){
                 if (lines.isNotEmpty())
                     reqWord()
+            }
+        }
+
+        viewModel.successDownloadAudio.observe(this){
+            retryDownload = 0
+            it?.output?.let{ output ->
+                saveByteToWav(output)
+            }
+            downloadTextList.removeAt(0)
+            if (downloadTextList.isNotEmpty())
+                viewModel.downloadAudio(ReqModel(downloadTextList[0]))
+        }
+
+        viewModel.errorDownloadAudio.observe(this) {
+            retryDownload += 1
+            Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+            if (retryDownload <4){
+                if (downloadTextList.isNotEmpty())
+                    viewModel.downloadAudio(ReqModel(downloadTextList[0]))
             }
         }
     }
@@ -248,18 +270,17 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         binding!!.includeSetting.tvTimer.text = "$hrs:$minute:$seconds"
     }
 
-    private fun saveFile(){
+    private fun saveFile(fileName:String){
         try {
-            val exDir = Environment.getExternalStorageDirectory()
-            val directory = File(exDir.absolutePath.toString() + "/TTS")
+            val directory = File(Environment.getExternalStorageDirectory().absolutePath + "/TTS")
             directory.mkdirs()
-            val  file = File(exDir,"data.txt")
+            val  file = File(directory,"ttsText${fileName}.txt")
             val fileOutputStream = FileOutputStream(file)
             val outputStreamWriter = OutputStreamWriter(fileOutputStream)
             outputStreamWriter.write(binding!!.etText.text.toString())
             outputStreamWriter.flush()
             outputStreamWriter.close()
-            Toast.makeText(requireContext(), "saved", Toast.LENGTH_LONG).show()
+//            Toast.makeText(requireContext(), "saved", Toast.LENGTH_LONG).show()
         } catch (e: IOException) {
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG)
                 .show()
@@ -267,13 +288,14 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     }
 
     @SuppressLint("NewApi")
-    private fun saveAudio(){
+    private fun downloadAudio(){
         viewLifecycleOwner.lifecycleScope.launch {
-            val splitText = binding!!.etText.text?.trim().toString().chunked(700)//.split(delimiter).toTypedArray()
+            val splitText = binding!!.etText.text?.trim().toString().chunked(700)
             for (i in splitText.indices){
-                lines.add(splitText[i])
+                downloadTextList.add(splitText[i])
             }
-            viewModel.getAudio(ReqModel(lines[0]))
+            viewModel.downloadAudio(ReqModel(downloadTextList[0]))
+            saveFile("$currentTime")
         }
     }
 
@@ -308,7 +330,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                 playerListening?.setOnPreparedListener {
                     if (isPaused || isPlaying)
                         return@setOnPreparedListener
-                    highlightText(playList[0].word)
+//                    highlightText(playList[0].word)
 //                    seekBarChange(playerListening?.duration!!.toLong())
                     playerListening?.start()
                     timeCount(1)
@@ -381,8 +403,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
-    private fun playByte(data:String?=null){
-
+    private fun saveByteToWav(data:String?=null){
         val clipData =android.util.Base64.decode(data,0)
         subChunk2Size += byteArrayToNumber(byteArrayOf(clipData[40],clipData[41],clipData[42],clipData[43]),4,1).int
         chunkSize += byteArrayToNumber(byteArrayOf(clipData[4],clipData[5],clipData[6],clipData[7]),4,1).int
@@ -391,12 +412,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
         if (lines.isNotEmpty())
             return
-        val mediaPlayer = MediaPlayer()
-        mediaPlayer.setAudioAttributes(AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).setUsage(AudioAttributes.USAGE_MEDIA).build())
 
-        val soundFile = File(Environment.getExternalStorageDirectory().absolutePath + "/AudioRecording")
+        val soundFile = File(Environment.getExternalStorageDirectory().absolutePath + "/TTS")
         soundFile.mkdirs()
-        val file= File(soundFile.path, "/audioRecording1.wav")//File(soundFile, "audioFile.mp3")
+        val file= File(soundFile.path, "/ttsAudio${currentTime}.wav")//File(soundFile, "audioFile.mp3")
         try {
             val output = FileOutputStream(file,true)
             for (i in 0 until allByteArray.size){
@@ -412,6 +431,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                 }
             }
             output.close()
+            allByteArray.clear()
         }catch (e:Exception){
             toast(e.message!!)
         }
@@ -421,9 +441,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private fun timeCount(times: Int?){
         timeCount += times!!
         val second = if (timeCount % 60 <= 9) "0${timeCount % 60}" else timeCount % 60
-        val minutes = timeCount/60 % 60
-        val hours = minutes/60 % 24
-        binding?.includeSetting?.tvTimer?.text = "$hours:$minutes:${timeCount%60}"
+        val minutes = if (timeCount/60 % 60 <=9) "0${timeCount/60 % 60}" else timeCount % 60
+        val hours = if (timeCount/60/60 % 24 <= 9) "0${timeCount/60/60 % 24}" else timeCount/60/60 % 24
+        binding?.includeSetting?.tvTimer?.text = "$hours:$minutes:$second"
     }
 
     private fun reqWord(){
@@ -431,6 +451,14 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             viewModel.getAudio(ReqModel(lines[0].replace(regex,"")))
         else{
             viewModel.getAudio(ReqModel(lines[0]))
+        }
+    }
+
+    private fun reqDownloadAudio(){
+        if (downloadTextList[0].contains(regex))
+            viewModel.getAudio(ReqModel(downloadTextList[0]))
+        else{
+            viewModel.getAudio(ReqModel(downloadTextList[0]))
         }
     }
 

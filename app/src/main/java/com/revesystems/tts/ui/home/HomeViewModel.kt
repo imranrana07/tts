@@ -13,20 +13,37 @@ import kotlinx.coroutines.launch
 class HomeViewModel: ViewModel(){
     private val  synthesizerRepo = HomeRepo()
     val success = MutableLiveData<ResModel?>()
+    val successDownloadAudio = MutableLiveData<ResModel?>()
     val error = MutableLiveData<String>()
+    val errorDownloadAudio = MutableLiveData<String>()
     val progressBar = MutableLiveData<Int>()
 
     fun getAudio(reqModel : ReqModel){
-        progressBar.postValue(View.VISIBLE)
+//        progressBar.postValue(View.VISIBLE)
         viewModelScope.launch {
             try {
                 val res = synthesizerRepo.getAudio(reqModel)
                 success.postValue(res)
-                progressBar.postValue(View.GONE)
+//                progressBar.postValue(View.GONE)
             }catch (e: ApiException){
                 error.postValue(e.localizedMessage)
+//                progressBar.postValue(View.GONE)
+            }
+        }
+    }
+
+    fun downloadAudio(reqModel : ReqModel){
+        progressBar.postValue(View.VISIBLE)
+        viewModelScope.launch {
+            try {
+                val res = synthesizerRepo.getAudio(reqModel)
+                successDownloadAudio.postValue(res)
+                progressBar.postValue(View.GONE)
+            }catch (e: ApiException){
+                errorDownloadAudio.postValue(e.localizedMessage)
                 progressBar.postValue(View.GONE)
             }
         }
     }
+
 }
