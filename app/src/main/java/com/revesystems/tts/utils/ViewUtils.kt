@@ -9,7 +9,7 @@ fun Fragment.toast(message:String){
     Toast.makeText(context,message,Toast.LENGTH_SHORT).show()
 }
 fun Context.toast(message:String){
-    Toast.makeText(applicationContext,message,Toast.LENGTH_LONG).show()
+    Toast.makeText(applicationContext,message,Toast.LENGTH_SHORT).show()
 }
 
 const val VISIBLE = View.VISIBLE

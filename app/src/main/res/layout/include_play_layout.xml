@@ -27,17 +27,51 @@
         android:padding="@dimen/dp_12"
         android:visibility="gone">
 
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnDownloadDisabled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:background="@drawable/bg_r6_sol_c9c9"
+            android:text="@string/download"
+            android:paddingHorizontal="@dimen/dp_20"
+            android:paddingVertical="@dimen/dp_12"
+            android:drawableStart="@drawable/ic_download"
+            android:drawablePadding="@dimen/dp_16"
+            android:textColor="@color/white"
+            android:textSize="@dimen/sp_16"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnDownloadEnabled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:background="@drawable/bg_r6_sol_136"
+            android:text="@string/download"
+            android:paddingHorizontal="@dimen/dp_20"
+            android:paddingVertical="@dimen/dp_12"
+            android:drawableStart="@drawable/ic_download"
+            android:drawablePadding="@dimen/dp_16"
+            android:textColor="@color/white"
+            android:textSize="@dimen/sp_16"
+            android:visibility="invisible"/>
+
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvTimer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toEndOf="@id/skPlayProgress"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/btnDownloadDisabled"
+            app:layout_constraintBottom_toBottomOf="@id/btnDownloadDisabled"
+            app:layout_constraintStart_toEndOf="@id/btnDownloadDisabled"
+            app:layout_constraintEnd_toStartOf="@id/btnPause"
             android:background="@drawable/bg_r6_sol_ff_st_c7c"
             android:text="@string/_00_00_00"
-            android:paddingVertical="@dimen/dp_4"
-            android:paddingHorizontal="@dimen/dp_6"
+            android:paddingVertical="@dimen/dp_6"
+            android:paddingHorizontal="@dimen/dp_10"
             android:textSize="@dimen/sp_16"
             android:textStyle="bold"
             android:textColor="@color/_303030"/>
@@ -46,53 +80,23 @@
             android:id="@+id/btnPause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/tvTimer"
             app:layout_constraintBottom_toBottomOf="@id/tvTimer"
+            app:layout_constraintEnd_toEndOf="parent"
             app:srcCompat="@drawable/ic_pause"
-            android:visibility="invisible"/>
+            android:padding="@dimen/dp_8"/>
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/btnPlayBlue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/tvTimer"
-            app:layout_constraintBottom_toBottomOf="@id/tvTimer"
-            app:layout_constraintEnd_toStartOf="@id/skPlayProgress"
-            app:srcCompat="@drawable/ic_play_blue"
-            android:padding="@dimen/dp_8"/>
-
-        <androidx.appcompat.widget.AppCompatSeekBar
-            android:id="@+id/skPlayProgress"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toEndOf="@id/btnPause"
+            app:layout_constraintStart_toStartOf="@id/btnPause"
             app:layout_constraintTop_toTopOf="@id/btnPause"
-            app:layout_constraintEnd_toStartOf="@id/tvTimer"
+            app:layout_constraintEnd_toEndOf="@id/btnPause"
             app:layout_constraintBottom_toBottomOf="@id/btnPause"
-            android:thumbTint="@color/_136EE5"
-            tools:targetApi="n"
-            android:progressTint="@color/_136EE5"
-            android:progressBackgroundTint="@color/_BEC3C9"/>
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnDownloadTxt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/tvTimer"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/btnDownloadAudio"
-            android:text="download txt"/>
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnDownloadAudio"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/tvTimer"
-            app:layout_constraintStart_toEndOf="@id/btnDownloadTxt"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:text="download Audio"/>
+            app:srcCompat="@drawable/ic_play_blue"
+            android:padding="@dimen/dp_8"
+            android:visibility="invisible"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

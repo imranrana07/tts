@@ -53,7 +53,8 @@
             android:text="@string/sample_text"
             android:textColorHint="@color/_C7C9CB"
             android:textColor="@color/_303030"
-            android:textSize="@dimen/sp_16"/>
+            android:textSize="@dimen/sp_16"
+            android:paddingTop="@dimen/dp_12"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.github.barteksc.pdfviewer.PDFView

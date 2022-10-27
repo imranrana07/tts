@@ -51,14 +51,13 @@
             app:layout_constraintTop_toTopOf="@id/view1"
             app:layout_constraintBottom_toBottomOf="@id/view1"
             app:layout_constraintEnd_toStartOf="@id/tvUnicode"
-            android:text="@string/unicode"
+            android:text="@string/ascii"
             android:background="@drawable/bg_r4_sol_136"
             android:textColor="@color/white"
             android:gravity="center"
             android:layout_marginStart="@dimen/dp_6"
             android:layout_marginEnd="@dimen/dp_3"
-            android:layout_marginVertical="@dimen/dp_6"
-            android:textSize="@dimen/sp_8"/>
+            android:layout_marginVertical="@dimen/dp_6"/>
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvUnicode"
@@ -68,12 +67,12 @@
             app:layout_constraintTop_toTopOf="@id/view1"
             app:layout_constraintBottom_toBottomOf="@id/view1"
             app:layout_constraintEnd_toEndOf="@id/view1"
-            android:text="@string/ascii"
+            android:text="@string/unicode"
             android:textColor="@color/_136EE5"
             android:gravity="center"
             android:layout_marginEnd="@dimen/dp_6"
             android:layout_marginVertical="@dimen/dp_6"
-            android:textSize="@dimen/sp_8"
+
             android:layout_marginStart="@dimen/dp_3"/>
 
         <View
@@ -101,7 +100,7 @@
             android:layout_marginStart="@dimen/dp_6"
             android:layout_marginEnd="@dimen/dp_3"
             android:layout_marginVertical="@dimen/dp_6"
-            android:textSize="@dimen/sp_8"/>
+            />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvSSML"
@@ -116,7 +115,7 @@
             android:gravity="center"
             android:layout_marginEnd="@dimen/dp_6"
             android:layout_marginVertical="@dimen/dp_6"
-            android:textSize="@dimen/sp_8"
+
             android:layout_marginStart="@dimen/dp_3"/>
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -145,8 +144,7 @@
             android:progressBackgroundTint="@color/_303030"
             app:tickMarkTint="@color/_F6F9FF"
             android:layout_marginTop="@dimen/dp_5"
-            android:layout_marginEnd="@dimen/dp_40"
-            />
+            android:layout_marginEnd="@dimen/dp_40" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvPitch"

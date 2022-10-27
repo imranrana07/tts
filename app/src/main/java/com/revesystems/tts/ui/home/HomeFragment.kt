@@ -2,6 +2,8 @@ package com.revesystems.tts.ui.home
 
 import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
+import android.app.DownloadManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
@@ -23,6 +25,7 @@ import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.itextpdf.text.ExceptionConverter
 import com.itextpdf.text.pdf.PdfReader
@@ -33,13 +36,13 @@ import com.revesystems.tts.data.model.ReqModel
 import com.revesystems.tts.databinding.FragmentHomeBinding
 import com.revesystems.tts.ui.SettingsBottomSheetFragment
 import com.revesystems.tts.utils.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.*
 import java.lang.Short.reverseBytes
 import java.nio.ByteBuffer
 import java.nio.ByteOrder.BIG_ENDIAN
 import java.nio.ByteOrder.LITTLE_ENDIAN
+import java.nio.charset.StandardCharsets
 
 
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
@@ -54,11 +57,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private var currentPlayPosition = 0
     private var url = ""
     private var retry = 0
-    private var count = 0
+    private var timeCount = 0
     private var allByteArray = ArrayList<ByteArray>()
     private var chunkSize = 0
     private var totalDataSize = 0
     private var subChunk2Size = 0
+    private val regex = Regex("[।,.|!]")
 
     // Initialize result launcher
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
@@ -80,7 +84,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     @RequiresApi(Build.VERSION_CODES.M)
     override fun init(savedInstanceState: Bundle?) {
 
-//        playerListening = MediaPlayer()
+        playerListening = MediaPlayer()
         binding!!.etText.addTextChangedListener(tvWatcher)
         clickEvents()
         observers()
@@ -114,7 +118,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                 binding!!.includeSetting.btnPause.visibility = INVISIBLE
                 binding!!.includeSetting.btnPlayBlue.visibility = VISIBLE
             }
-
         }
 
         binding!!.includeSetting.btnPlay.setOnClickListener {
@@ -123,6 +126,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 //            seekBarChange(8000)
             isPaused = false
             binding!!.includeSetting.btnPlay.visibility = GONE
+            binding!!.btnSettings.visibility = GONE
+            binding!!.btnSelectPdf.visibility = GONE
             binding!!.includeSetting.playSetting.visibility = VISIBLE
             binding!!.includeSetting.btnPlayBlue.visibility = INVISIBLE
             binding!!.includeSetting.btnPause.visibility = VISIBLE
@@ -130,36 +135,37 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             currentPlayPosition = 0
         }
 
-        binding!!.includeSetting.btnDownloadTxt.setOnClickListener {
-            saveFile()
-        }
-
-        binding!!.includeSetting.btnDownloadAudio.setOnClickListener {
-            saveAudio()
-        }
+//        binding!!.includeSetting.btnDownloadTxt.setOnClickListener {
+//            saveFile()
+//        }
+//
+//        binding!!.includeSetting.btnDownloadAudio.setOnClickListener {
+//            saveAudio()
+//        }
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     private fun observers(){
         viewModel.progressBar.observe(this) {
-            binding?.progressBar?.visibility = it
+//            binding?.progressBar?.visibility = it
         }
 
         viewModel.success.observe(this) {
-            retry = 0
 
+            retry = 0
             it?.output?.let {
                     it1 ->if (lines.isNotEmpty()) {
                 playList.add(PlayListModel(lines[0], it1))
                 lines.removeAt(0)
-                playByte(it1)
+//                playByte(it1)
                 if (!isPlaying || playerListening?.isPlaying == false) {
-//                    playOnlineAudio()
+                    playOnlineAudio()
                 }
             }
 
-                if (lines.isNotEmpty())
-                    viewModel.getAudio(ReqModel(lines[0]))
+                if (lines.isNotEmpty()) {
+                    reqWord()
+                }
             }
         }
 
@@ -168,7 +174,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
             if (retry <4){
                 if (lines.isNotEmpty())
-                    viewModel.getAudio(ReqModel(lines[0]))
+                    reqWord()
             }
         }
     }
@@ -233,35 +239,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
     }
 
-    private fun seekBarChange(millis:Long){
-        val totalMillis = if (millis>1000) millis else 1000
-        binding!!.includeSetting.skPlayProgress.progress = 0
-        binding!!.includeSetting.skPlayProgress.max =  (totalMillis/1000).toInt()
-
-        object: CountDownTimer(totalMillis, 1000){
-            override fun onTick(p0: Long) {
-                milliToTime(p0)
-                binding!!.includeSetting.skPlayProgress.progress = (totalMillis/1000).toInt() - (p0/1000).toInt()
-            }
-            override fun onFinish() {
-            }
-        }.start()
-
-        binding!!.includeSetting.skPlayProgress.setOnSeekBarChangeListener(object :SeekBar.OnSeekBarChangeListener{
-            override fun onProgressChanged(seekBar: SeekBar?, p1: Int, p2: Boolean) {
-
-            }
-
-            override fun onStartTrackingTouch(p0: SeekBar?) {
-
-            }
-
-            override fun onStopTrackingTouch(p0: SeekBar?) {
-
-            }
-        })
-    }
-
     @SuppressLint("SetTextI18n")
     private fun milliToTime(millis: Long){
         val milliToSecond = (millis/1000)
@@ -291,34 +268,23 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
     @SuppressLint("NewApi")
     private fun saveAudio(){
-
-//        val decoded = java.util.Base64.getUrlDecoder().decode("data:audio/wav;base64,$url")
-//        val downloadManager = requireContext().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager?
-//        val stringUrl = String(decoded,StandardCharsets.UTF_8)
-//        val uri = stringUrl.toUri()//Uri.parse("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
-//        val request = DownloadManager.Request(uri)
-////        request.setVisibleInDownloadsUi(true)
-//        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-//        request.setDestinationInExternalPublicDir(
-//            Environment.DIRECTORY_DOWNLOADS,
-//            uri.lastPathSegment
-//        )
-//        toast("download started")
-//        downloadManager!!.enqueue(request)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val splitText = binding!!.etText.text?.trim().toString().chunked(700)//.split(delimiter).toTypedArray()
+            for (i in splitText.indices){
+                lines.add(splitText[i])
+            }
+            viewModel.getAudio(ReqModel(lines[0]))
+        }
     }
 
     private fun splitTexts(){
-        val regex = Regex("[।,.|!]")
         val delimiter = " "
         viewLifecycleOwner.lifecycleScope.launch {
-            val splitText = binding!!.etText.text?.trim().toString().chunked(800)//.split(delimiter).toTypedArray()
+            val splitText = binding!!.etText.text?.trim().toString().split(delimiter).toTypedArray()
             for (i in splitText.indices){
-//                if (splitText[i].contains(regex))
-//                    lines.add(splitText[i].replace(regex,""))
-//                else
                     lines.add(splitText[i])
             }
-            viewModel.getAudio(ReqModel(/*binding!!.etText.text?.trim().toString()*/lines[0]))
+            reqWord()
         }
     }
 
@@ -342,13 +308,14 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                 playerListening?.setOnPreparedListener {
                     if (isPaused || isPlaying)
                         return@setOnPreparedListener
-//                    highlightText(playList[0].word)
+                    highlightText(playList[0].word)
 //                    seekBarChange(playerListening?.duration!!.toLong())
                     playerListening?.start()
+                    timeCount(1)
                     isPlaying = true
                 }
                 playerListening?.setOnErrorListener { mediaPlayer, i, i2 ->
-//                    playOnlineAudio()
+                    playOnlineAudio()
                     true
                 }
                 playerListening?.setOnCompletionListener {
@@ -361,36 +328,33 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                             playOnlineAudio()
                             return@setOnCompletionListener
                         }
-                        binding!!.includeSetting.playSetting.visibility = GONE
-                        binding!!.includeSetting.btnPlay.visibility = VISIBLE
+//                        binding!!.includeSetting.playSetting.visibility = GONE
+//                        binding!!.includeSetting.btnPlay.visibility = VISIBLE
+                        binding!!.includeSetting.btnDownloadEnabled.visibility = VISIBLE
+                        binding!!.includeSetting.btnDownloadDisabled.visibility = INVISIBLE
                         startingPoint = 0
-                        /*if ( playerListening?.isPlaying == false && !isPlaying) {
-                            playOnlineAudio()
-                        }else{
-                            if (lines.isNotEmpty()) {
-                                isPlaying = false
-                                return@setOnCompletionListener
-                            }
-                            binding!!.includeSetting.playSetting.visibility = GONE
-                            binding!!.includeSetting.btnPlay.visibility = VISIBLE
-                            startingPoint = 0
-                        }*/
                     }
                     isPlaying = false
                 }
             } catch (e: IOException) {
-                e.message?.let { toast(it) }
+                Dispatchers.Main(){
+                    e.message?.let { toast(it) }
+                }
             } catch ( e: IllegalArgumentException) {
-                e.message?.let { toast(it) }
+                Dispatchers.Main(){
+                    e.message?.let { toast(it) }
+                }
             } catch (e: IllegalStateException) {
-                e.message?.let { toast(it) }
+                Dispatchers.Main(){
+                    e.message?.let { toast(it) }
+                }
             }
         }
     }
 
     private fun highlightText(text: String){
         val endChar = startingPoint+text.length
-        val spannable = SpannableString(binding!!.etText.text)
+        val spannable = SpannableString(binding!!.etText.text.toString())
         val colorW = BackgroundColorSpan(Color.WHITE)
         spannable.setSpan(colorW,0,binding!!.etText.text?.length!!,Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
         val color = BackgroundColorSpan(Color.YELLOW)
@@ -452,4 +416,22 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             toast(e.message!!)
         }
     }
+
+    @SuppressLint("SetTextI18n")
+    private fun timeCount(times: Int?){
+        timeCount += times!!
+        val second = if (timeCount % 60 <= 9) "0${timeCount % 60}" else timeCount % 60
+        val minutes = timeCount/60 % 60
+        val hours = minutes/60 % 24
+        binding?.includeSetting?.tvTimer?.text = "$hours:$minutes:${timeCount%60}"
+    }
+
+    private fun reqWord(){
+        if (lines[0].contains(regex))
+            viewModel.getAudio(ReqModel(lines[0].replace(regex,"")))
+        else{
+            viewModel.getAudio(ReqModel(lines[0]))
+        }
+    }
+
 }
