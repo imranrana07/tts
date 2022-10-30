@@ -38,7 +38,7 @@ import kotlinx.coroutines.invoke
 import kotlinx.coroutines.launch
 import java.io.*
 
-val PERMISSIONS = arrayOf(WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE)
+val PERMISSIONS = arrayOf(WRITE_EXTERNAL_STORAGE)
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     //initialization
     private lateinit var inputStream: InputStream
@@ -211,6 +211,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             downloadTextList.removeAt(0)
             if (downloadTextList.isNotEmpty())
                 viewModel.downloadAudio(ReqModel(downloadTextList[0]))
+            else
+                toast(getString(R.string.download_done))
         }
 
         viewModel.errorDownloadAudio.observe(this) {
