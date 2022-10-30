@@ -11,16 +11,17 @@ import java.security.KeyStore
 import java.security.SecureRandom
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
-import javax.net.ssl.HostnameVerifier
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
 object RetrofitClient {
-    val gson = GsonBuilder().setLenient().create()
-    val client = OkHttpClient
+    private val gson = GsonBuilder().setLenient().create()
+    private val client = OkHttpClient
         .Builder()
+//        .readTimeout(30,TimeUnit.SECONDS)
         .addInterceptor(logger)
         .build()
 
@@ -60,7 +61,7 @@ object RetrofitClient {
                     ) {
                     }
 
-                    override fun getAcceptedIssuers(): Array<X509Certificate?>? {
+                    override fun getAcceptedIssuers(): Array<X509Certificate?> {
                         return arrayOf()
                     }
                 }
@@ -86,7 +87,7 @@ object RetrofitClient {
 
             val builder = OkHttpClient.Builder()
             builder.sslSocketFactory(sslSocketFactory, trustManager)
-            builder.hostnameVerifier(HostnameVerifier { _, _ -> true })
+            builder.hostnameVerifier { _, _ -> true }
             builder.build()
         } catch (e: Exception) {
             throw RuntimeException(e)

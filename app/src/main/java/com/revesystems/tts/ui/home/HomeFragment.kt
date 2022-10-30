@@ -1,9 +1,9 @@
 package com.revesystems.tts.ui.home
 
+import android.Manifest
+import android.Manifest.permission.*
 import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
-import android.app.DownloadManager
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
@@ -11,43 +11,37 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.os.Environment
 import android.text.Editable
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextWatcher
 import android.text.style.BackgroundColorSpan
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.itextpdf.text.ExceptionConverter
 import com.itextpdf.text.pdf.PdfReader
 import com.itextpdf.text.pdf.parser.PdfTextExtractor
+import com.revesystems.tts.R
 import com.revesystems.tts.core.BaseFragment
 import com.revesystems.tts.data.model.PlayListModel
 import com.revesystems.tts.data.model.ReqModel
 import com.revesystems.tts.databinding.FragmentHomeBinding
 import com.revesystems.tts.ui.SettingsBottomSheetFragment
 import com.revesystems.tts.utils.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.invoke
+import kotlinx.coroutines.launch
 import java.io.*
-import java.lang.Short.reverseBytes
-import java.nio.ByteBuffer
-import java.nio.ByteOrder.BIG_ENDIAN
-import java.nio.ByteOrder.LITTLE_ENDIAN
-import java.nio.charset.StandardCharsets
 
-
+val PERMISSIONS = arrayOf(WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE)
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
+    //initialization
     private lateinit var inputStream: InputStream
-    //    private var currentSBPosition = 0
     private var playerListening: MediaPlayer?=null
     private var lines = ArrayList<String>()
     private var downloadTextList = ArrayList<String>()
@@ -56,7 +50,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private var isPaused = false
     private var startingPoint = 0
     private var currentPlayPosition = 0
-    private var url = ""
     private var retry = 0
     private var retryDownload = 0
     private var timeCount = 0
@@ -66,19 +59,38 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private var subChunk2Size = 0
     private val regex = Regex("[।,.|!]")
     private var currentTime:Long? = null
+    private var isFromSpannableString = false
+    private var lastWord:String? = null
 
-    // Initialize result launcher
+
+    // launcher for below 11
+    private val permReqLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+        val granted = permissions.entries.all {
+            it.value
+        }
+        if (granted) {
+            startDownload()
+        }else{
+            toast(resources.getString(R.string.permission_required))
+        }
+    }
+
+    //result launcher to get pdf file
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
         if (it.resultCode == RESULT_OK && it != null) {
-            controlVisibility(true)
             getTextsFromPdf(it.data?.data!!)
             if (playerListening!= null)
                 playerListening?.reset()
             lines.clear()
             playList.clear()
             binding?.includeSetting?.btnPlay?.visibility = VISIBLE
-        }else{
-            controlVisibility(false)
+        }
+    }
+
+    // launcher for storage permission android 11
+    private val permReqLauncherStorage11 = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
+        if (it.resultCode == RESULT_OK && it != null) {
+
         }
     }
 
@@ -86,6 +98,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
     override fun setViewModel(): Class<HomeViewModel>  = HomeViewModel::class.java
 
+    @SuppressLint("SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.M)
     override fun init(savedInstanceState: Bundle?) {
         playerListening = MediaPlayer()
@@ -105,8 +118,16 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         binding!!.includeSetting.btnPlayBlue.setOnClickListener {
-            isPaused = false
             if (playerListening!= null){
+                isPaused = false
+                if (playList.isEmpty()){
+                    binding!!.includeSetting.btnDownloadDisabled.visibility = VISIBLE
+                    binding!!.includeSetting.btnDownloadEnabled.visibility = INVISIBLE
+                    binding!!.includeSetting.tvTimer.text = resources.getText(R.string._00_00_00)
+                    timeCount = 0
+                    splitTexts()
+                }
+
                 playerListening?.seekTo(currentPlayPosition)
                 playerListening?.start()
                 binding!!.includeSetting.btnPlayBlue.visibility = INVISIBLE
@@ -115,8 +136,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             }
         }
         binding!!.includeSetting.btnPause.setOnClickListener {
-            isPaused = true
             if (playerListening!=null && playerListening?.isPlaying == true){
+                isPaused = true
                 playerListening?.pause()
                 currentPlayPosition = playerListening?.currentPosition!!
                 binding!!.includeSetting.btnPause.visibility = INVISIBLE
@@ -125,9 +146,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
 
         binding!!.includeSetting.btnPlay.setOnClickListener {
+            if (binding!!.etText.text.toString().isEmpty()) {
+                return@setOnClickListener
+            }
             lines.clear()
             playList.clear()
-//            seekBarChange(8000)
             isPaused = false
             binding!!.includeSetting.btnPlay.visibility = GONE
             binding!!.btnSettings.visibility = GONE
@@ -139,13 +162,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             currentPlayPosition = 0
         }
 
-//        binding!!.includeSetting.btnDownloadTxt.setOnClickListener {
-//            saveFile()
-//        }
-//
         binding!!.includeSetting.btnDownloadEnabled.setOnClickListener {
-            currentTime = System.currentTimeMillis()
-            downloadAudio()
+            permissionChecker()
+//            startDownload()
         }
     }
 
@@ -161,7 +180,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                     it1 ->if (lines.isNotEmpty()) {
                 playList.add(PlayListModel(lines[0], it1))
                 lines.removeAt(0)
-//                playByte(it1)
                 if (!isPlaying || playerListening?.isPlaying == false) {
                     playOnlineAudio()
                 }
@@ -178,6 +196,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             if (retry <4){
                 if (lines.isNotEmpty())
                     reqWord()
+            }else{
+                retry = 0
+                binding!!.includeSetting.btnPlayBlue.visibility = VISIBLE
+                binding!!.includeSetting.btnPause.visibility = INVISIBLE
             }
         }
 
@@ -211,6 +233,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         @SuppressLint("SetTextI18n")
         override fun afterTextChanged(p0: Editable?) {
             binding!!.tvLetterCount.text = "${p0.toString().length}/2500"
+            if (p0.toString().isEmpty()){
+                binding!!.includeSetting.btnPlay.visibility = GONE
+            }else if (!isFromSpannableString){
+                binding!!.includeSetting.btnPlay.visibility = VISIBLE
+                isFromSpannableString = false
+            }
         }
     }
 
@@ -219,18 +247,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         pdfIntent.type = "application/pdf"
         pdfIntent.addCategory(Intent.CATEGORY_OPENABLE)
         resultLauncher.launch(pdfIntent)
-    }
-
-    private fun controlVisibility(shouldVisible:Boolean){
-//        if (shouldVisible) {
-//            binding!!.pdfViewer.visibility = VISIBLE
-//            binding!!.tlText.visibility = GONE
-//            binding!!.tvLetterCount.visibility = GONE
-//        }else{
-//            binding!!.pdfViewer.visibility =GONE
-//            binding!!.tlText.visibility = VISIBLE
-//            binding!!.tvLetterCount.visibility = VISIBLE
-//        }
     }
 
     private fun getTextsFromPdf(uri: Uri){
@@ -259,15 +275,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }catch (e:IOException){
         }catch (e: ExceptionConverter){
         }
-    }
-
-    @SuppressLint("SetTextI18n")
-    private fun milliToTime(millis: Long){
-        val milliToSecond = (millis/1000)
-        val seconds = if (milliToSecond % 60 <= 9) "0${milliToSecond % 60}" else milliToSecond % 60
-        val minute = if ((milliToSecond/60) %60 <= 9) "0${(milliToSecond/60) %60}" else (milliToSecond/60) %60
-        val hrs = if ((milliToSecond.toString().toInt()/3600) <= 9) "0${milliToSecond.toString().toInt()/3600}" else (milliToSecond.toString().toInt()/3600)
-        binding!!.includeSetting.tvTimer.text = "$hrs:$minute:$seconds"
     }
 
     private fun saveFile(fileName:String){
@@ -306,6 +313,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
             for (i in splitText.indices){
                     lines.add(splitText[i])
             }
+            lastWord = lines[lines.size-1]
             reqWord()
         }
     }
@@ -330,13 +338,13 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                 playerListening?.setOnPreparedListener {
                     if (isPaused || isPlaying)
                         return@setOnPreparedListener
-//                    highlightText(playList[0].word)
+                    highlightText(playList[0].word)
 //                    seekBarChange(playerListening?.duration!!.toLong())
                     playerListening?.start()
                     timeCount(1)
                     isPlaying = true
                 }
-                playerListening?.setOnErrorListener { mediaPlayer, i, i2 ->
+                playerListening?.setOnErrorListener { _, _, _ ->
                     playOnlineAudio()
                     true
                 }
@@ -350,24 +358,24 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
                             playOnlineAudio()
                             return@setOnCompletionListener
                         }
-//                        binding!!.includeSetting.playSetting.visibility = GONE
-//                        binding!!.includeSetting.btnPlay.visibility = VISIBLE
                         binding!!.includeSetting.btnDownloadEnabled.visibility = VISIBLE
                         binding!!.includeSetting.btnDownloadDisabled.visibility = INVISIBLE
+                        binding!!.includeSetting.btnPause.visibility = INVISIBLE
+                        binding!!.includeSetting.btnPlayBlue.visibility = VISIBLE
                         startingPoint = 0
                     }
                     isPlaying = false
                 }
             } catch (e: IOException) {
-                Dispatchers.Main(){
+                Dispatchers.Main{
                     e.message?.let { toast(it) }
                 }
             } catch ( e: IllegalArgumentException) {
-                Dispatchers.Main(){
+                Dispatchers.Main{
                     e.message?.let { toast(it) }
                 }
             } catch (e: IllegalStateException) {
-                Dispatchers.Main(){
+                Dispatchers.Main{
                     e.message?.let { toast(it) }
                 }
             }
@@ -375,6 +383,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     }
 
     private fun highlightText(text: String){
+        isFromSpannableString = true
+
         val endChar = startingPoint+text.length
         val spannable = SpannableString(binding!!.etText.text.toString())
         val colorW = BackgroundColorSpan(Color.WHITE)
@@ -385,21 +395,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         else
             spannable.setSpan(color,startingPoint,endChar,Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
         binding!!.etText.setText(spannable)
-        if (playList[playList.size-1].word != text) {
+        if (lastWord!=null && lastWord != text) {
             startingPoint += text.length + 1
         }
-    }
-
-    private fun byteArrayToNumber(bytes: ByteArray?, numOfBytes: Int, type: Int): ByteBuffer {
-        val buffer: ByteBuffer = ByteBuffer.allocate(numOfBytes)
-        if (type == 0) {
-            buffer.order(BIG_ENDIAN)
-        } else {
-            buffer.order(LITTLE_ENDIAN)
-        }
-        buffer.put(bytes)
-        buffer.rewind()
-        return buffer
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -454,12 +452,28 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
         }
     }
 
-    private fun reqDownloadAudio(){
-        if (downloadTextList[0].contains(regex))
-            viewModel.getAudio(ReqModel(downloadTextList[0]))
-        else{
-            viewModel.getAudio(ReqModel(downloadTextList[0]))
+    private fun permissionChecker(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+            if (!hasPermission11()){
+                toast(resources.getString(R.string.permission_required))
+                permReqLauncherStorage11.launch(requireContext().requestStoragePermission11())
+                return
+            }else{
+                startDownload()
+            }
+        }else {
+            if (hasPermissions10(requireContext(), PERMISSIONS)){
+                startDownload()
+            }else{
+//                toast(resources.getString(R.string.permission_required))
+                permReqLauncher.launch(PERMISSIONS)
+                return
+            }
         }
     }
 
+    private fun startDownload(){
+        currentTime = System.currentTimeMillis()
+        downloadAudio()
+    }
 }
