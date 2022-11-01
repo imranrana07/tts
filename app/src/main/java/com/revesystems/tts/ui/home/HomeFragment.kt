@@ -17,6 +17,7 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextWatcher
 import android.text.style.BackgroundColorSpan
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
@@ -40,6 +41,7 @@ import java.io.*
 
 val PERMISSIONS = arrayOf(WRITE_EXTERNAL_STORAGE)
 class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
+
     //initialization
     private lateinit var inputStream: InputStream
     private var playerListening: MediaPlayer?=null
@@ -61,7 +63,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     private var currentTime:Long? = null
     private var isFromSpannableString = false
     private var lastWord:String? = null
-
 
     // launcher for below 11
     private val permReqLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -90,7 +91,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
     // launcher for storage permission android 11
     private val permReqLauncherStorage11 = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
         if (it.resultCode == RESULT_OK && it != null) {
-
+            startDownload()
         }
     }
 
@@ -227,9 +228,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding,HomeViewModel>() {
 
     private val tvWatcher = object : TextWatcher {
         override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            Log.v("","")
         }
 
         override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            Log.v("","")
         }
 
         @SuppressLint("SetTextI18n")

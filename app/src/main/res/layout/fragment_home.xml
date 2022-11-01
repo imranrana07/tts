@@ -43,18 +43,20 @@
         android:maxLength="2500"
         app:hintEnabled="false"
         app:boxBackgroundMode="outline">
+
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etText"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/bg_r6_sol_ff"
+            android:fontFamily="@font/solaimanlipi_regular"
             android:gravity="start"
             android:hint="@string/hint_write"
-            android:text="@string/sample_text"
-            android:textColorHint="@color/_C7C9CB"
+            android:maxLength="2500"
+            android:paddingTop="@dimen/dp_12"
             android:textColor="@color/_303030"
-            android:textSize="@dimen/sp_16"
-            android:paddingTop="@dimen/dp_12"/>
+            android:textColorHint="@color/_999DA7"
+            android:textSize="@dimen/sp_24" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.github.barteksc.pdfviewer.PDFView

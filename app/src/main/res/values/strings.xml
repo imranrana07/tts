@@ -25,11 +25,11 @@
     <string name="age">বয়স</string>
     <string name="cancel">Cancel</string>
 <!--    <string name="sample_text"> সালে করাচিতে টি-টোয়েন্টিতে বাংলাদেশ </string>-->
-    <string name="sample_text"> দেশে নিরাপদ সড়ক নিশ্চিত করার সর্বোচ্চ সংস্থা
-    </string>
+<!--    <string name="sample_text"> দেশে নিরাপদ সড়ক নিশ্চিত করার সর্বোচ্চ সংস্থা-->
+<!--    </string>-->
     <string name="download">ডাউনলোড</string>
     <string name="permission_required">অনুমতি প্রয়োজন</string>
-    <string name="download_done">ডাউনলোড হয়ে গেছে</string>
+    <string name="download_done">ডাউনলোড হয়ে গেছে </string>
 </resources>
 
 <!--জাতীয় সড়ক নিরাপত্তা কাউন্সিল (এনআরএসসি)। সংস্থাটির চেয়ারম্যান সড়ক পরিবহন ও সেতুমন্ত্রী।সদস্য হলেন সরকারের সংশ্লিষ্ট সব দপ্তরের প্রতিনিধি, পরিবহন খাতের মালিক-শ্রমিক প্রতিনিধি, বিশেষজ্ঞ ও নাগরিক সমাজের প্রতিনিধিরা।
