@@ -3,7 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/groupSetting"
@@ -69,6 +70,7 @@
             app:layout_constraintEnd_toEndOf="@id/view1"
             android:text="@string/unicode"
             android:textColor="@color/_136EE5"
+            android:background="@drawable/bg_r4_sol_f6f"
             android:gravity="center"
             android:layout_marginEnd="@dimen/dp_6"
             android:layout_marginVertical="@dimen/dp_6"
@@ -99,8 +101,7 @@
             android:gravity="center"
             android:layout_marginStart="@dimen/dp_6"
             android:layout_marginEnd="@dimen/dp_3"
-            android:layout_marginVertical="@dimen/dp_6"
-            />
+            android:layout_marginVertical="@dimen/dp_6"/>
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvSSML"
@@ -111,11 +112,11 @@
             app:layout_constraintBottom_toBottomOf="@id/view2"
             app:layout_constraintEnd_toEndOf="@id/view2"
             android:text="@string/ssml"
+            android:background="@drawable/bg_r4_sol_f6f"
             android:textColor="@color/_136EE5"
             android:gravity="center"
             android:layout_marginEnd="@dimen/dp_6"
             android:layout_marginVertical="@dimen/dp_6"
-
             android:layout_marginStart="@dimen/dp_3"/>
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -125,7 +126,6 @@
             android:text="@string/speed"
             app:layout_constraintStart_toStartOf="@id/tvAscii"
             app:layout_constraintTop_toBottomOf="@id/view2"
-            android:textColor="@color/white"
             android:textStyle="bold"
             android:layout_marginTop="@dimen/dp_30"/>
 
@@ -153,7 +153,6 @@
             android:text="@string/pitch"
             app:layout_constraintStart_toStartOf="@id/tvSpeed"
             app:layout_constraintTop_toBottomOf="@id/skSpeed"
-            android:textColor="@color/white"
             android:textStyle="bold"
             android:layout_marginTop="@dimen/dp_12"/>
 
@@ -175,10 +174,9 @@
             android:text="@string/voice"
             app:layout_constraintTop_toBottomOf="@id/skPitch"
             app:layout_constraintStart_toStartOf="@id/tvSpeed"
-            android:textColor="@color/white"
             android:textStyle="bold"
             android:layout_marginTop="@dimen/dp_40"
-            android:textSize="@dimen/sp_18"/>
+            android:textSize="@dimen/sp_12"/>
 
         <View
             android:id="@+id/viewVoice"

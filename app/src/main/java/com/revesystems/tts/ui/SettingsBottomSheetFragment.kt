@@ -42,6 +42,7 @@ class SettingsBottomSheetFragment: BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         clickEvents()
+        binding.skSpeed.seekBar.progress = 0
     }
     
     private fun clickEvents(){

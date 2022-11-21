@@ -11,18 +11,18 @@
         style="@style/Widget.AppCompat.SeekBar.Discrete"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="4"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:progress="2"
-        android:thumbTint="@color/white"
+        android:thumbTint="@color/_136EE5"
         android:progressBackgroundTint="@color/_303030"
         app:tickMarkTint="@color/_F6F9FF"
         android:paddingStart="@dimen/dp_6"
         android:paddingEnd="@dimen/dp_6"
         android:tickMarkTint="@color/_303030"
-        tools:ignore="UnusedAttribute" />
+        tools:ignore="UnusedAttribute"
+        android:max="2"
+        android:min="-2"/>
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv2x"
